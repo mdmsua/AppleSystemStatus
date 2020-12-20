@@ -1,0 +1,8 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=mdmsua;AccountKey=F/lmAyKV8ocmhaB3IBLynDBL6qA6mSpepY7bMVp0/3ZA18Ev6+Lu6HORB8LvvWzl78cs7ryZ06Sy8b7Xv4fnfQ==;EndpointSuffix=core.windows.net",
+        "DatabaseConnectionString": "Server=localhost;Database=AppleSystemStatus;User Id=app;Password=EiSy9ith;",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet"
+    }
+}
