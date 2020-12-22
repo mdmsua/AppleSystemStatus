@@ -16,5 +16,7 @@ namespace AppleSystemStatus.Entities
 #nullable enable
 
         public ICollection<Event> Events { get; set; } = Array.Empty<Event>().ToList();
+
+        public StatusType? Status { get; set; }
     }
 }
