@@ -68,7 +68,7 @@ namespace AppleSystemStatus.Functions
 
         [FunctionName(nameof(ServicesExportHttpTrigger))]
         public async Task<IActionResult> ServicesExportHttpTrigger(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "stores/{store}/services")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "stores/{store}/services")] HttpRequest req,
             Guid store,
             ILogger log)
         {
@@ -78,7 +78,7 @@ namespace AppleSystemStatus.Functions
 
         [FunctionName(nameof(EventsExportHttpTrigger))]
         public async Task<IActionResult> EventsExportHttpTrigger(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "services/{service}/events")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "services/{service}/events")] HttpRequest req,
             Guid service,
             ILogger log)
         {
