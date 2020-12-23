@@ -59,7 +59,7 @@ namespace AppleSystemStatus.Functions
 
         [FunctionName(nameof(StoresExportHttpTrigger))]
         public async Task<IActionResult> StoresExportHttpTrigger(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "stores")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "stores")] HttpRequest req,
             ILogger log)
         {
             var stores = await repository.ExportStoresAsync();
