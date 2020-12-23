@@ -19,8 +19,8 @@ namespace AppleSystemStatus.Functions
             this.repository = repository;
         }
 
-        [FunctionName(nameof(SystemStatusHttpTrigger))]
-        public static async Task<IActionResult> SystemStatusHttpTrigger(
+        [FunctionName(nameof(SystemStatusHttp))]
+        public static async Task<IActionResult> SystemStatusHttp(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "systemstatus")] HttpRequest req,
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
@@ -29,8 +29,8 @@ namespace AppleSystemStatus.Functions
             return starter.CreateCheckStatusResponse(req, instanceId);
         }
 
-        [FunctionName(nameof(StoresImportHttpTrigger))]
-        public static async Task<IActionResult> StoresImportHttpTrigger(
+        [FunctionName(nameof(StoresImportHttp))]
+        public static async Task<IActionResult> StoresImportHttp(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "stores")] HttpRequest req,
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
@@ -39,8 +39,8 @@ namespace AppleSystemStatus.Functions
             return starter.CreateCheckStatusResponse(req, instanceId);
         }
 
-        [FunctionName(nameof(SystemStatusCronTrigger))]
-        public static async Task SystemStatusCronTrigger(
+        [FunctionName(nameof(SystemStatusCron))]
+        public static async Task SystemStatusCron(
             [TimerTrigger("0 * * * * *")] TimerInfo timer,
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
@@ -48,8 +48,8 @@ namespace AppleSystemStatus.Functions
             await StartSystemStatusOrchestrationAsync(starter, log);
         }
 
-        [FunctionName(nameof(StoresImportCronTrigger))]
-        public static async Task StoresImportCronTrigger(
+        [FunctionName(nameof(StoresImportCron))]
+        public static async Task StoresImportCron(
             [TimerTrigger("0 0 0 * * *")] TimerInfo timer,
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
@@ -57,8 +57,8 @@ namespace AppleSystemStatus.Functions
             await StartStoresImportrchestrationAsync(starter, log);
         }
 
-        [FunctionName(nameof(StoresExportHttpTrigger))]
-        public async Task<IActionResult> StoresExportHttpTrigger(
+        [FunctionName(nameof(StoresExportHttp))]
+        public async Task<IActionResult> StoresExportHttp(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "stores")] HttpRequest req,
             ILogger log)
         {
@@ -66,8 +66,8 @@ namespace AppleSystemStatus.Functions
             return new OkObjectResult(stores);
         }
 
-        [FunctionName(nameof(ServicesExportHttpTrigger))]
-        public async Task<IActionResult> ServicesExportHttpTrigger(
+        [FunctionName(nameof(ServicesExportHttp))]
+        public async Task<IActionResult> ServicesExportHttp(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "stores/{store}/services")] HttpRequest req,
             Guid store,
             ILogger log)
@@ -76,8 +76,8 @@ namespace AppleSystemStatus.Functions
             return new OkObjectResult(services);
         }
 
-        [FunctionName(nameof(EventsExportHttpTrigger))]
-        public async Task<IActionResult> EventsExportHttpTrigger(
+        [FunctionName(nameof(EventsExportHttp))]
+        public async Task<IActionResult> EventsExportHttp(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "services/{service}/events")] HttpRequest req,
             Guid service,
             ILogger log)
