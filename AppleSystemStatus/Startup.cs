@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http;
+using System.Net.Security;
 using System.Reflection;
 
 using AppleSystemStatus.Services;
@@ -28,7 +29,7 @@ namespace AppleSystemStatus
 
             builder.Services
                 .AddHttpClient<SystemStatusService>(client => client.BaseAddress = new Uri("https://www.apple.com"))
-                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { ServerCertificateCustomValidationCallback = (sender, certificate, chain, sslPolicyErrors) => certificate.SubjectName.Name.StartsWith("CN=www.apple.com") });
+                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { ServerCertificateCustomValidationCallback = (sender, certificate, chain, sslPolicyErrors) => sslPolicyErrors == SslPolicyErrors.None || sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch && certificate.SubjectName.Name.StartsWith("CN=www.apple.com") });
 
             builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 

@@ -78,12 +78,22 @@ namespace AppleSystemStatus.Services
             await context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<string>> ExportStoresAsync() =>
+        public async Task<IEnumerable<string>> ExportStoreNamesAsync() =>
             await context.Stores.Select(s => s.Name).AsNoTracking().ToListAsync();
+
+        public async Task<IEnumerable<Store>> ExportStoresAsync() =>
+            await context.Stores.OrderBy(s => s.Name).AsNoTracking().ToListAsync();
+
+        public async Task<IEnumerable<ServiceEntity>> ExportServicesAsync(Guid store) =>
+            await context.Services.Where(s => s.StoreId == store).AsNoTracking().ToListAsync();
+
+        public async Task<IEnumerable<EventEntity>> ExportEventsAsync(Guid service) =>
+            await context.Events.Where(s => s.ServiceId == service).AsNoTracking().ToListAsync();
+
 
         public async Task ImportStoresAsync(IEnumerable<string> stores)
         {
-            var storeEntities = await ExportStoresAsync();
+            var storeEntities = await ExportStoreNamesAsync();
             log.LogDebug("Stores in database: {stores}", string.Join(", ", storeEntities));
             log.LogDebug("Candidate stores: {stores}", string.Join(", ", stores));
             var absentStores = stores.Except(storeEntities).ToList();

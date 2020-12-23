@@ -44,7 +44,7 @@ namespace AppleSystemStatus.Functions
         {
             using var scope = log.BeginScope(nameof(RetrieveStores));
             log.LogInformation("Retrieving stores...");
-            return repositoryService.ExportStoresAsync().ContinueWith(r => r.Result.ToArray());
+            return repositoryService.ExportStoreNamesAsync().ContinueWith(r => r.Result.ToArray());
         }
 
         [FunctionName(nameof(FetchStoreSupport))]

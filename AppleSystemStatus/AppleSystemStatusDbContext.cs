@@ -1,6 +1,6 @@
 using AppleSystemStatus.Entities;
 using Microsoft.EntityFrameworkCore;
-using System.Runtime.InteropServices;
+using System;
 
 namespace AppleSystemStatus
 {
@@ -25,9 +25,10 @@ namespace AppleSystemStatus
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-#if DEBUG
-            optionsBuilder.UseSqlServer(string.Format("Server=localhost;Database=AppleSystemStatus;{0}", RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Integrated Security=true;" : "User Id=sa;Password=EiSy9ith;"));
-#endif
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseSqlServer(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
