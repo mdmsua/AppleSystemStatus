@@ -1,0 +1,13 @@
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
+COPY . .
+RUN dotnet publish -c Release -o /home/site/wwwroot
+ARG AZURE_WEBJOBS_STORAGE
+ARG DATABASE_CONNECTION_STRING
+FROM mcr.microsoft.com/azure-functions/dotnet:3.0
+ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
+    AzureFunctionsJobHost__Logging__Console__IsEnabled=true \
+    AzureWebJobsStorage=${AZURE_WEBJOBS_STORAGE} \
+    DatabaseConnectionString=${DATABASE_CONNECTION_STRING} \
+    AzureWebJobs.SystemStatusHttp.Disabled=true \
+    AzureWebJobs.StoresImportHttp.Disabled=true
+COPY --from=build ["/home/site/wwwroot", "/home/site/wwwroot"]
