@@ -25,7 +25,7 @@ jobs:
           push: true
           tags: |
             ass:latest
-            ass:${{ GITHUB_SHA }}
+            ass:${GITHUB_SHA}
           build-args: |
             AZURE_WEBJOBS_STORAGE=${{ secrets.AZURE_WEBJOBS_STORAGE }}
             DATABASE_CONNECTION_STRING=${{ secrets.DATABASE_CONNECTION_STRING }}
