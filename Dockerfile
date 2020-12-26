@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
 ARG DATABASE_CONNECTION_STRING
+ENV DatabaseConnectionString=${DATABASE_CONNECTION_STRING}
 COPY . .
 RUN dotnet tool restore && \
     dotnet ef database update --project AppleSystemStatus --connection "${DATABASE_CONNECTION_STRING}" && \

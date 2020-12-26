@@ -23,6 +23,14 @@ namespace AppleSystemStatus
         {
         }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseSqlServer(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
+            }
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Store>(entity =>
