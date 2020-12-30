@@ -13,7 +13,7 @@ namespace AppleSystemStatus.Entities
         public string Name { get; set; } = string.Empty;
 
         [JsonIgnore]
-        public Guid StoreId { get; set; }
+        public int StoreId { get; set; }
 #nullable disable
         [JsonIgnore]
         public Store Store { get; set; }

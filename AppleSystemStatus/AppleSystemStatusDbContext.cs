@@ -36,8 +36,6 @@ namespace AppleSystemStatus
             modelBuilder.Entity<Store>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.HasIndex(x => x.Name).IsUnique(true);
-                entity.Property(e => e.Id).ValueGeneratedOnAdd();
                 entity.HasMany(e => e.Services).WithOne(x => x.Store).HasForeignKey(x => x.StoreId).IsRequired(true);
             });
 

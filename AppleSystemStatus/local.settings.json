@@ -4,7 +4,7 @@
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "DatabaseConnectionString": "Server=localhost;Database=AppleSystemStatus;Integrated Security=true;",
-    "AzureWebJobs.SystemStatusCronTrigger.Disabled": true,
-    "AzureWebJobs.StoresImportCronTrigger.Disabled": true
+    "AzureWebJobs.SystemStatusCron.Disabled": true,
+    "AzureWebJobs.StoresImportCron.Disabled": true
   }
 }

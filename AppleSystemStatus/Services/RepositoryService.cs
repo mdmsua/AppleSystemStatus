@@ -11,6 +11,7 @@ using AppleSystemStatus.Entities;
 using System.Linq;
 using AutoMapper;
 using System;
+using Microsoft.Data.SqlClient;
 
 namespace AppleSystemStatus.Services
 {
@@ -27,15 +28,17 @@ namespace AppleSystemStatus.Services
             this.log = log;
         }
 
-        public async Task ImportSystemStatusAsync(string store, IEnumerable<ServiceModel> services)
+        public async Task ImportSystemStatusAsync(int store, IEnumerable<ServiceModel> services)
         {
-            log.LogDebug("Checking if {store} exists...", store);
-            var storeEntity = await context.Stores.Include(x => x.Services).ThenInclude(x => x.Events).SingleOrDefaultAsync(x => x.Name == store);
-            if (store is null)
+            log.LogDebug("Checking if store {store} exists...", store);
+            var useIdentityInsert = false;
+            var storeEntity = await context.Stores.Include(x => x.Services).ThenInclude(x => x.Events).SingleOrDefaultAsync(x => x.Id == store);
+            if (storeEntity is null)
             {
                 log.LogDebug("Store {store} doesn't exist. Creating...", store);
-                storeEntity = new Store { Name = store! };
+                storeEntity = new Store(store);
                 await context.Stores.AddAsync(storeEntity);
+                useIdentityInsert = true;
             }
             log.LogDebug("Checking {store} services...", store);
             foreach (var service in services)
@@ -75,35 +78,59 @@ namespace AppleSystemStatus.Services
                 }
                 serviceEntity.Status = serviceEntity.Events.SingleOrDefault(e => !e.EpochEndDate.HasValue)?.StatusType;
             }
-            await context.SaveChangesAsync();
+            if (useIdentityInsert)
+            {
+                await SaveChangesIdentityInsertAsync();
+            }
+            else
+            {
+                await context.SaveChangesAsync();
+            }
         }
 
-        public async Task<IEnumerable<string>> ExportStoreNamesAsync() =>
-            await context.Stores.Select(s => s.Name).AsNoTracking().ToListAsync();
-
         public async Task<IEnumerable<Store>> ExportStoresAsync() =>
-            await context.Stores.OrderBy(s => s.Name).AsNoTracking().ToListAsync();
+            await context.Stores.AsNoTracking().ToListAsync();
 
-        public async Task<IEnumerable<ServiceEntity>> ExportServicesAsync(Guid store) =>
+        public async Task<IEnumerable<ServiceEntity>> ExportServicesAsync(int store) =>
             await context.Services.Where(s => s.StoreId == store).AsNoTracking().ToListAsync();
 
         public async Task<IEnumerable<EventEntity>> ExportEventsAsync(Guid service) =>
             await context.Events.Where(e => e.ServiceId == service).OrderByDescending(e => e.EpochEndDate).AsNoTracking().ToListAsync();
 
-        public async Task ImportStoresAsync(IEnumerable<string> stores)
+        public async Task ImportStoresAsync(IEnumerable<int> stores)
         {
-            var storeEntities = await ExportStoreNamesAsync();
-            log.LogDebug("Stores in database: {stores}", string.Join(", ", storeEntities));
+            var storedIds = await context.Stores.Select(s => s.Id).ToListAsync();
+            log.LogDebug("Stores in database: {stores}", string.Join(", ", storedIds));
             log.LogDebug("Candidate stores: {stores}", string.Join(", ", stores));
-            var absentStores = stores.Except(storeEntities).ToList();
+            var absentStores = stores.Except(storedIds).ToList();
             if (absentStores.Count == 0)
             {
                 log.LogInformation("No new stores detected");
                 return;
             }
             log.LogInformation("Importing {count} new stores: {stores}", absentStores.Count, string.Join(", ", absentStores));
-            context.Stores.AddRange(absentStores.Select(x => new Store { Name = x }));
-            await context.SaveChangesAsync();
+            context.Stores.AddRange(absentStores.Select(x => new Store(x)));
+            await SaveChangesIdentityInsertAsync();
+        }
+
+        private async Task SaveChangesIdentityInsertAsync()
+        {
+            await context.Database.OpenConnectionAsync();
+            try
+            {
+                await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT dbo.Stores ON");
+                await context.SaveChangesAsync();
+                await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT dbo.Stores OFF");
+            }
+            catch (SqlException exception)
+            {
+                log.LogError(exception, exception.Message);
+                throw;
+            }
+            finally
+            {
+                await context.Database.CloseConnectionAsync();
+            }
         }
     }
 }

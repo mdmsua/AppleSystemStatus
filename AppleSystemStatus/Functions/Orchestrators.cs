@@ -23,7 +23,7 @@ namespace AppleSystemStatus.Functions
                 log.LogInformation("Retrieving stores...");
             }
 
-            var stores = await context.CallActivityAsync<string[]>(nameof(Activities.RetrieveStores), default);
+            var stores = await context.CallActivityAsync<int[]>(nameof(Activities.RetrieveStores), default);
 
             if (!context.IsReplaying)
             {
@@ -54,8 +54,8 @@ namespace AppleSystemStatus.Functions
         public static async Task StoresImport(
             [OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
         {
-            var cultures = CultureInfo.GetCultures(CultureTypes.SpecificCultures).Select(culture => culture.Name.Replace('-', '_'));
-            var tasks = cultures.Select(culture => context.CallActivityWithRetryAsync<KeyValuePair<string, bool>>(nameof(Activities.FetchStoreSupport), new RetryOptions(TimeSpan.FromSeconds(1), 1), culture));
+            var cultures = CultureInfo.GetCultures(CultureTypes.SpecificCultures).Select(culture => culture.LCID).Where(culture => culture != 4096);
+            var tasks = cultures.Select(culture => context.CallActivityWithRetryAsync<KeyValuePair<int, bool>>(nameof(Activities.FetchStoreSupport), new RetryOptions(TimeSpan.FromSeconds(1), 1), culture));
             var results = await Task.WhenAll(tasks);
             var stores = results.Where(kvp => kvp.Value).Select(kvp => kvp.Key).ToList();
             if (!context.IsReplaying)

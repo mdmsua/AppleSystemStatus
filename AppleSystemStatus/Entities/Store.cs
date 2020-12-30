@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,9 +6,17 @@ namespace AppleSystemStatus.Entities
 {
     public class Store
     {
-        public Guid Id { get; set; }
+        public Store()
+        {
 
-        public string Name { get; set; } = string.Empty;
+        }
+
+        public Store(int store)
+        {
+            Id = store;
+        }
+
+        public int Id { get; set; }
 
         [JsonIgnore]
         public ICollection<Service> Services { get; set; } = Enumerable.Empty<Service>().ToList();

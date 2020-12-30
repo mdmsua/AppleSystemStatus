@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AppleSystemStatus.Migrations
 {
-    public partial class Initial : Migration
+    public partial class Bootstrap : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -11,8 +11,8 @@ namespace AppleSystemStatus.Migrations
                 name: "Stores",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(nullable: false),
-                    Name = table.Column<string>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1")
                 },
                 constraints: table =>
                 {
@@ -25,7 +25,8 @@ namespace AppleSystemStatus.Migrations
                 {
                     Id = table.Column<Guid>(nullable: false),
                     Name = table.Column<string>(nullable: false),
-                    StoreId = table.Column<Guid>(nullable: false)
+                    StoreId = table.Column<int>(nullable: false),
+                    Status = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -80,12 +81,6 @@ namespace AppleSystemStatus.Migrations
                 name: "IX_Services_StoreId",
                 table: "Services",
                 column: "StoreId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Stores_Name",
-                table: "Stores",
-                column: "Name",
-                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

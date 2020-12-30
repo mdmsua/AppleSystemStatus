@@ -11,7 +11,5 @@ ARG DATABASE_CONNECTION_STRING
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true \
     AzureWebJobsStorage=${AZURE_WEBJOBS_STORAGE} \
-    DatabaseConnectionString=${DATABASE_CONNECTION_STRING} \
-    AzureWebJobs.SystemStatusHttp.Disabled=true \
-    AzureWebJobs.StoresImportHttp.Disabled=true
+    DatabaseConnectionString=${DATABASE_CONNECTION_STRING}
 COPY --from=build ["/home/site/wwwroot", "/home/site/wwwroot"]
