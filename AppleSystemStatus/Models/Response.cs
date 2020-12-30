@@ -8,6 +8,6 @@ namespace AppleSystemStatus.Models
         [JsonProperty("services")]
         public Service[] Services { get; set; } = Array.Empty<Service>();
 
-        public int Store { get; set; }
+        public int Country { get; set; }
     }
 }

@@ -4,16 +4,16 @@ using System.Linq;
 
 namespace AppleSystemStatus.Entities
 {
-    public class Store
+    public class Country
     {
-        public Store()
+        public Country()
         {
 
         }
 
-        public Store(int store)
+        public Country(int id)
         {
-            Id = store;
+            Id = id;
         }
 
         public int Id { get; set; }

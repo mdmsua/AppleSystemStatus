@@ -5,6 +5,6 @@
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "DatabaseConnectionString": "Server=localhost;Database=AppleSystemStatus;Integrated Security=true;",
     "AzureWebJobs.SystemStatusCron.Disabled": true,
-    "AzureWebJobs.StoresImportCron.Disabled": true
+    "AzureWebJobs.CountriesImportCron.Disabled": true
   }
 }
