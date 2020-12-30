@@ -78,7 +78,7 @@ namespace AppleSystemStatus.Functions
             ILogger log)
         {
             var stores = await repository.ExportStoresAsync();
-            return new OkObjectResult(stores.Select(store => mapper.Map<Store>(store)));
+            return new OkObjectResult(stores.Select(store => mapper.Map<Store>(store)).OrderBy(store => store.Country));
         }
 
         [FunctionName(nameof(ServicesExportHttp))]
