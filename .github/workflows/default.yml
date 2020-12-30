@@ -30,3 +30,4 @@ jobs:
           build-args: |
             AZURE_WEBJOBS_STORAGE=${{ secrets.AZURE_WEBJOBS_STORAGE }}
             DATABASE_CONNECTION_STRING=${{ secrets.DATABASE_CONNECTION_STRING }}
+            MIGRATION_CONNECTION_STRING=${{ secrets.MIGRATION_CONNECTION_STRING }}
