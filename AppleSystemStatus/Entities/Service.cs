@@ -13,10 +13,10 @@ namespace AppleSystemStatus.Entities
         public string Name { get; set; } = string.Empty;
 
         [JsonIgnore]
-        public int StoreId { get; set; }
+        public int CountryId { get; set; }
 #nullable disable
         [JsonIgnore]
-        public Store Store { get; set; }
+        public Country Country { get; set; }
 #nullable enable
 
         [JsonIgnore]

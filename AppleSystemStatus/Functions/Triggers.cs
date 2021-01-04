@@ -35,13 +35,13 @@ namespace AppleSystemStatus.Functions
             return starter.CreateCheckStatusResponse(req, instanceId);
         }
 
-        [FunctionName(nameof(StoresImportHttp))]
-        public static async Task<IActionResult> StoresImportHttp(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "stores")] HttpRequest req,
+        [FunctionName(nameof(CountriesImportHttp))]
+        public static async Task<IActionResult> CountriesImportHttp(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "countries")] HttpRequest req,
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
         {
-            var instanceId = await StartStoresImportrchestrationAsync(starter, log);
+            var instanceId = await StartCountriesImportOrchestrationAsync(starter, log);
             return starter.CreateCheckStatusResponse(req, instanceId);
         }
 
@@ -54,13 +54,13 @@ namespace AppleSystemStatus.Functions
             await StartSystemStatusOrchestrationAsync(starter, log);
         }
 
-        [FunctionName(nameof(StoresImportCron))]
-        public static async Task StoresImportCron(
+        [FunctionName(nameof(CountriesImportCron))]
+        public static async Task CountriesImportCron(
             [TimerTrigger("0 0 0 * * *")] TimerInfo timer,
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
         {
-            await StartStoresImportrchestrationAsync(starter, log);
+            await StartCountriesImportOrchestrationAsync(starter, log);
         }
 
         [FunctionName(nameof(Purge))]
@@ -72,22 +72,22 @@ namespace AppleSystemStatus.Functions
             await starter.PurgeInstanceHistoryAsync(DateTime.MinValue, DateTime.UtcNow, Enum.GetValues(typeof(OrchestrationStatus)).Cast<OrchestrationStatus>());
         }
 
-        [FunctionName(nameof(StoresExportHttp))]
-        public async Task<IActionResult> StoresExportHttp(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "stores")] HttpRequest req,
+        [FunctionName(nameof(CountriesExportHttp))]
+        public async Task<IActionResult> CountriesExportHttp(
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "countries")] HttpRequest req,
             ILogger log)
         {
-            var stores = await repository.ExportStoresAsync();
-            return new OkObjectResult(stores.Select(store => mapper.Map<Store>(store)).OrderBy(store => store.Country));
+            var countries = await repository.ExportCountriesAsync();
+            return new OkObjectResult(countries.Select(country => mapper.Map<Country>(country)).OrderBy(country => country.Name));
         }
 
         [FunctionName(nameof(ServicesExportHttp))]
         public async Task<IActionResult> ServicesExportHttp(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "stores/{store}/services")] HttpRequest req,
-            int store,
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "countries/{country}/services")] HttpRequest req,
+            int country,
             ILogger log)
         {
-            var services = await repository.ExportServicesAsync(store);
+            var services = await repository.ExportServicesAsync(country);
             return new OkObjectResult(services);
         }
 
@@ -108,10 +108,10 @@ namespace AppleSystemStatus.Functions
             return instanceId;
         }
 
-        private static async Task<string> StartStoresImportrchestrationAsync(IDurableOrchestrationClient orchestrator, ILogger log)
+        private static async Task<string> StartCountriesImportOrchestrationAsync(IDurableOrchestrationClient orchestrator, ILogger log)
         {
-            string instanceId = await orchestrator.StartNewAsync(nameof(Orchestrators.StoresImport), null);
-            log.LogInformation($"Started stores import orchestration with ID = '{instanceId}'.");
+            string instanceId = await orchestrator.StartNewAsync(nameof(Orchestrators.CountriesImport), null);
+            log.LogInformation($"Started counties import orchestration with ID = '{instanceId}'.");
             return instanceId;
         }
     }

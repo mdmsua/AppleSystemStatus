@@ -22,22 +22,22 @@ namespace AppleSystemStatus.Services
             this.mapper = mapper;
         }
 
-        public async Task<bool> IsStoreSupportedAsync(int store)
+        public async Task<bool> IsCountrySupportedAsync(int country)
         {
-            var path = string.Format(pathFormat, mapper.Map<Store>(store).Code);
+            var path = string.Format(pathFormat, mapper.Map<Country>(country).Code);
             using var request = new HttpRequestMessage(HttpMethod.Head, path);
             using var response = await client.SendAsync(request);
             return response.IsSuccessStatusCode;
         }
 
-        public async Task<Response> GetSystemStatusAsync(int store)
+        public async Task<Response> GetSystemStatusAsync(int country)
         {
-            var path = string.Format(pathFormat, mapper.Map<Store>(store).Code);
+            var path = string.Format(pathFormat, mapper.Map<Country>(country).Code);
             using var stream = await client.GetStreamAsync(path);
             using var streamReader = new StreamReader(stream);
             using var jsonReader = new JsonTextReader(streamReader);
             var response = jsonSerializer.Deserialize<Response>(jsonReader);
-            response.Store = store;
+            response.Country = country;
             return response;
         }
     }

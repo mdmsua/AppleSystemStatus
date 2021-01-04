@@ -2,16 +2,16 @@
 
 namespace AppleSystemStatus.Models
 {
-    public class Store
+    public class Country
     {
-        public Store()
+        public Country()
         {
 
         }
 
-        public Store(int store)
+        public Country(int id)
         {
-            Id = store;
+            Id = id;
         }
 
         public int Id { get; set; }
@@ -19,7 +19,7 @@ namespace AppleSystemStatus.Models
         [JsonIgnore]
         public string Code { get; set; } = string.Empty;
 
-        public string Country { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
 
         public string Language { get; set; } = string.Empty;
     }
