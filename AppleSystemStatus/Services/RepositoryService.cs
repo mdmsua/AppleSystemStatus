@@ -95,7 +95,7 @@ namespace AppleSystemStatus.Services
             await context.Services.Where(s => s.CountryId == country).AsNoTracking().ToListAsync();
 
         public async Task<IEnumerable<EventEntity>> ExportEventsAsync(Guid service) =>
-            await context.Events.Where(e => e.ServiceId == service).OrderBy(e => e.EpochEndDate).ThenByDescending(e => EpochStartDate).AsNoTracking().ToListAsync();
+            await context.Events.Where(e => e.ServiceId == service).OrderBy(e => e.EpochEndDate).ThenByDescending(e => e.EpochStartDate).AsNoTracking().ToListAsync();
 
         public async Task ImportCountriesAsync(IEnumerable<int> countries)
         {
