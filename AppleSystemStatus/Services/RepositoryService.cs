@@ -95,7 +95,7 @@ namespace AppleSystemStatus.Services
             await context.Services.Where(s => s.StoreId == store).AsNoTracking().ToListAsync();
 
         public async Task<IEnumerable<EventEntity>> ExportEventsAsync(Guid service) =>
-            await context.Events.Where(e => e.ServiceId == service).OrderByDescending(e => e.EpochEndDate).AsNoTracking().ToListAsync();
+            await context.Events.Where(e => e.ServiceId == service).OrderBy(e => e.EpochEndDate).ThenByDescending(e => EpochStartDate).AsNoTracking().ToListAsync();
 
         public async Task ImportStoresAsync(IEnumerable<int> stores)
         {
