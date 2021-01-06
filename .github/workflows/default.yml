@@ -2,17 +2,20 @@ name: default
 
 on:
   push:
-    branches: actions
+    tags:
+      - \d+\.\d+\.\d+
 
 env:
-  IMAGE_REPOSITORY: mdmsua.azurecr.io/ass
+  IMAGE_REPOSITORY: mdmsua.azurecr.io/aaplss
 
 jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v1
+      - uses: actions/checkout@v2
+      - name: Set vars
+        id: vars
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Login to Docker Registry
@@ -26,8 +29,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ${{ env.IMAGE_REPOSITORY }}:latest,${{ env.IMAGE_REPOSITORY }}:${{ github.sha }}
+          tags: ${{ env.IMAGE_REPOSITORY }}:latest,${{ env.IMAGE_REPOSITORY }}:${{ github.sha }},${{ env.IMAGE_REPOSITORY }}:${{ steps.vars.outputs.tag }}
           build-args: |
+            VERSION=${{ steps.vars.outputs.tag }}
             AZURE_WEBJOBS_STORAGE=${{ secrets.AZURE_WEBJOBS_STORAGE }}
             DATABASE_CONNECTION_STRING=${{ secrets.DATABASE_CONNECTION_STRING }}
             MIGRATION_CONNECTION_STRING=${{ secrets.MIGRATION_CONNECTION_STRING }}
