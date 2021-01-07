@@ -34,4 +34,5 @@ jobs:
             VERSION=${{ steps.vars.outputs.tag }}
             AZURE_WEBJOBS_STORAGE=${{ secrets.AZURE_WEBJOBS_STORAGE }}
             DATABASE_CONNECTION_STRING=${{ secrets.DATABASE_CONNECTION_STRING }}
-            MIGRATION_CONNECTION_STRING=${{ secrets.MIGRATION_CONNECTION_STRING }}
+            VAULT_URI=${{ secrets.VAULT_URI }}
+            VAULT_SECRET=${{ secrets.VAULT_SECRET }}
