@@ -19,6 +19,18 @@ namespace AppleSystemStatus.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+            modelBuilder.Entity("AppleSystemStatus.Entities.Country", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Countries");
+                });
+
             modelBuilder.Entity("AppleSystemStatus.Entities.Event", b =>
                 {
                     b.Property<Guid>("ServiceId")
@@ -74,6 +86,9 @@ namespace AppleSystemStatus.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("CountryId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -81,34 +96,13 @@ namespace AppleSystemStatus.Migrations
                     b.Property<int?>("Status")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("StoreId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("CountryId");
 
                     b.HasIndex("Name");
 
-                    b.HasIndex("StoreId");
-
                     b.ToTable("Services");
-                });
-
-            modelBuilder.Entity("AppleSystemStatus.Entities.Store", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("Stores");
                 });
 
             modelBuilder.Entity("AppleSystemStatus.Entities.Event", b =>
@@ -122,9 +116,9 @@ namespace AppleSystemStatus.Migrations
 
             modelBuilder.Entity("AppleSystemStatus.Entities.Service", b =>
                 {
-                    b.HasOne("AppleSystemStatus.Entities.Store", "Store")
+                    b.HasOne("AppleSystemStatus.Entities.Country", "Country")
                         .WithMany("Services")
-                        .HasForeignKey("StoreId")
+                        .HasForeignKey("CountryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

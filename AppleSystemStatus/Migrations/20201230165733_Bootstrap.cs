@@ -3,20 +3,20 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AppleSystemStatus.Migrations
 {
-    public partial class Initial : Migration
+    public partial class Bootstrap : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Stores",
+                name: "Countries",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(nullable: false),
-                    Name = table.Column<string>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Stores", x => x.Id);
+                    table.PrimaryKey("PK_Countries", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -25,15 +25,16 @@ namespace AppleSystemStatus.Migrations
                 {
                     Id = table.Column<Guid>(nullable: false),
                     Name = table.Column<string>(nullable: false),
-                    StoreId = table.Column<Guid>(nullable: false)
+                    CountryId = table.Column<int>(nullable: false),
+                    Status = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Services", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Services_Stores_StoreId",
-                        column: x => x.StoreId,
-                        principalTable: "Stores",
+                        name: "FK_Services_Countries_CountryId",
+                        column: x => x.CountryId,
+                        principalTable: "Countries",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -72,20 +73,14 @@ namespace AppleSystemStatus.Migrations
                 column: "EpochEndDate");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Services_CountryId",
+                table: "Services",
+                column: "CountryId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Services_Name",
                 table: "Services",
                 column: "Name");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Services_StoreId",
-                table: "Services",
-                column: "StoreId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Stores_Name",
-                table: "Stores",
-                column: "Name",
-                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -97,7 +92,7 @@ namespace AppleSystemStatus.Migrations
                 name: "Services");
 
             migrationBuilder.DropTable(
-                name: "Stores");
+                name: "Countries");
         }
     }
 }

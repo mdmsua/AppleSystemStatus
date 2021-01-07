@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 
 using AppleSystemStatus.Models;
 using AppleSystemStatus.Services;
-
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
@@ -28,41 +27,42 @@ namespace AppleSystemStatus.Functions
         public Task ImportSystemStatus([ActivityTrigger] Response response, ILogger log)
         {
             using var scope = log.BeginScope(nameof(ImportSystemStatus));
-            log.LogInformation("Importing {store} system status...", response.Store);
-            return repositoryService.ImportSystemStatusAsync(response.Store, response.Services);
+            log.LogInformation("Importing {country} system status...", response.Country);
+            return repositoryService.ImportSystemStatusAsync(response.Country, response.Services);
         }
 
         [FunctionName(nameof(FetchSystemStatus))]
-        public Task<Response> FetchSystemStatus([ActivityTrigger] string store, ILogger log)
+        public Task<Response> FetchSystemStatus([ActivityTrigger] int country, ILogger log)
         {
-            log.LogInformation("Fetching system status for store {store}...", store);
-            return systemStatusService.GetSystemStatusAsync(store);
+            log.LogInformation("Fetching system status for country {country}...", country);
+            return systemStatusService.GetSystemStatusAsync(country);
         }
 
-        [FunctionName(nameof(RetrieveStores))]
-        public Task<string[]> RetrieveStores([ActivityTrigger] IDurableActivityContext ctx, ILogger log)
+        [FunctionName(nameof(RetrieveCountries))]
+        public async Task<IEnumerable<int>> RetrieveCountries([ActivityTrigger] IDurableActivityContext ctx, ILogger log)
         {
-            using var scope = log.BeginScope(nameof(RetrieveStores));
-            log.LogInformation("Retrieving stores...");
-            return repositoryService.ExportStoreNamesAsync().ContinueWith(r => r.Result.ToArray());
+            using var scope = log.BeginScope(nameof(RetrieveCountries));
+            log.LogInformation("Retrieving countries...");
+            var countries = await repositoryService.ExportCountriesAsync();
+            return countries.Select(country => country.Id);
         }
 
-        [FunctionName(nameof(FetchStoreSupport))]
-        public async Task<KeyValuePair<string, bool>> FetchStoreSupport([ActivityTrigger] string store, ILogger log)
+        [FunctionName(nameof(FetchCountrySupport))]
+        public async Task<KeyValuePair<int, bool>> FetchCountrySupport([ActivityTrigger] int country, ILogger log)
         {
-            using var scope = log.BeginScope(nameof(FetchStoreSupport));
-            log.LogDebug("Fetching {store} store support...", store);
-            bool isSupported = await systemStatusService.IsStoreSupportedAsync(store);
-            log.LogDebug("Store {store} is {support}", store, isSupported ? "supported" : "not supported");
-            return new KeyValuePair<string, bool>(store, isSupported);
+            using var scope = log.BeginScope(nameof(FetchCountrySupport));
+            log.LogDebug("Fetching {country} country support...", country);
+            bool isSupported = await systemStatusService.IsCountrySupportedAsync(country);
+            log.LogDebug("Country {country is {support}", country, isSupported ? "supported" : "not supported");
+            return new KeyValuePair<int, bool>(country, isSupported);
         }
 
-        [FunctionName(nameof(ImportStores))]
-        public Task ImportStores([ActivityTrigger] string[] stores, ILogger log)
+        [FunctionName(nameof(ImportCountries))]
+        public Task ImportCountries([ActivityTrigger] int[] countries, ILogger log)
         {
-            using var scope = log.BeginScope(nameof(ImportStores));
-            log.LogInformation("Importing stores...");
-            return repositoryService.ImportStoresAsync(stores);
+            using var scope = log.BeginScope(nameof(ImportCountries));
+            log.LogInformation("Importing countries...");
+            return repositoryService.ImportCountriesAsync(countries);
         }
     }
 }

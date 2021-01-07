@@ -1,15 +1,22 @@
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace AppleSystemStatus.Entities
 {
-    public class Store
+    public class Country
     {
-        public Guid Id { get; set; }
+        public Country()
+        {
 
-        public string Name { get; set; } = string.Empty;
+        }
+
+        public Country(int id)
+        {
+            Id = id;
+        }
+
+        public int Id { get; set; }
 
         [JsonIgnore]
         public ICollection<Service> Services { get; set; } = Enumerable.Empty<Service>().ToList();

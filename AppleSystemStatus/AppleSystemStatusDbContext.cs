@@ -7,7 +7,7 @@ namespace AppleSystemStatus
     public class AppleSystemStatusDbContext : DbContext
     {
 #nullable disable
-        public DbSet<Store> Stores { get; set; }
+        public DbSet<Country> Countries { get; set; }
 
         public DbSet<Service> Services { get; set; }
 
@@ -33,12 +33,10 @@ namespace AppleSystemStatus
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Store>(entity =>
+            modelBuilder.Entity<Country>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.HasIndex(x => x.Name).IsUnique(true);
-                entity.Property(e => e.Id).ValueGeneratedOnAdd();
-                entity.HasMany(e => e.Services).WithOne(x => x.Store).HasForeignKey(x => x.StoreId).IsRequired(true);
+                entity.HasMany(e => e.Services).WithOne(x => x.Country).HasForeignKey(x => x.CountryId).IsRequired(true);
             });
 
             modelBuilder.Entity<Service>(entity =>

@@ -10,7 +10,10 @@
 				"/consoleloggerparameters:NoSummary"
 			],
 			"type": "process",
-			"problemMatcher": "$msCompile"
+			"problemMatcher": "$msCompile",
+			"options": {
+				"cwd": "${workspaceFolder}/AppleSystemStatus"
+			}
 		},
 		{
 			"label": "build",
@@ -26,7 +29,10 @@
 				"kind": "build",
 				"isDefault": true
 			},
-			"problemMatcher": "$msCompile"
+			"problemMatcher": "$msCompile",
+			"options": {
+				"cwd": "${workspaceFolder}/AppleSystemStatus"
+			}
 		},
 		{
 			"label": "clean release",
@@ -39,7 +45,10 @@
 				"/consoleloggerparameters:NoSummary"
 			],
 			"type": "process",
-			"problemMatcher": "$msCompile"
+			"problemMatcher": "$msCompile",
+			"options": {
+				"cwd": "${workspaceFolder}/AppleSystemStatus"
+			}
 		},
 		{
 			"label": "publish",
@@ -53,7 +62,10 @@
 			],
 			"type": "process",
 			"dependsOn": "clean release",
-			"problemMatcher": "$msCompile"
+			"problemMatcher": "$msCompile",
+			"options": {
+				"cwd": "${workspaceFolder}/AppleSystemStatus"
+			}
 		},
 		{
 			"type": "func",

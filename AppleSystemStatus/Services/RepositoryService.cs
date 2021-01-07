@@ -11,6 +11,7 @@ using AppleSystemStatus.Entities;
 using System.Linq;
 using AutoMapper;
 using System;
+using Microsoft.Data.SqlClient;
 
 namespace AppleSystemStatus.Services
 {
@@ -27,26 +28,28 @@ namespace AppleSystemStatus.Services
             this.log = log;
         }
 
-        public async Task ImportSystemStatusAsync(string store, IEnumerable<ServiceModel> services)
+        public async Task ImportSystemStatusAsync(int country, IEnumerable<ServiceModel> services)
         {
-            log.LogDebug("Checking if {store} exists...", store);
-            var storeEntity = await context.Stores.Include(x => x.Services).ThenInclude(x => x.Events).SingleOrDefaultAsync(x => x.Name == store);
-            if (store is null)
+            log.LogDebug("Checking if country {country} exists...", country);
+            var useIdentityInsert = false;
+            var countryEntity = await context.Countries.Include(x => x.Services).ThenInclude(x => x.Events).SingleOrDefaultAsync(x => x.Id == country);
+            if (countryEntity is null)
             {
-                log.LogDebug("Store {store} doesn't exist. Creating...", store);
-                storeEntity = new Store { Name = store! };
-                await context.Stores.AddAsync(storeEntity);
+                log.LogDebug("Country {country} doesn't exist. Creating...", country);
+                countryEntity = new Country(country);
+                await context.Countries.AddAsync(countryEntity);
+                useIdentityInsert = true;
             }
-            log.LogDebug("Checking {store} services...", store);
+            log.LogDebug("Checking {country} services...", country);
             foreach (var service in services)
             {
                 log.LogDebug("Service {service}...", service.ServiceName);
-                var serviceEntity = storeEntity.Services.SingleOrDefault(x => x.Name == service.ServiceName);
+                var serviceEntity = countryEntity.Services.SingleOrDefault(x => x.Name == service.ServiceName);
                 if (serviceEntity is null)
                 {
                     log.LogDebug("Service {service} doesn't exist. Creating...", service.ServiceName);
                     serviceEntity = new ServiceEntity { Name = service.ServiceName };
-                    storeEntity.Services.Add(serviceEntity);
+                    countryEntity.Services.Add(serviceEntity);
                 }
                 log.LogDebug("Checking {service} events...", service.ServiceName);
                 foreach (var @event in service.Events)
@@ -75,35 +78,59 @@ namespace AppleSystemStatus.Services
                 }
                 serviceEntity.Status = serviceEntity.Events.SingleOrDefault(e => !e.EpochEndDate.HasValue)?.StatusType;
             }
-            await context.SaveChangesAsync();
+            if (useIdentityInsert)
+            {
+                await SaveChangesIdentityInsertAsync();
+            }
+            else
+            {
+                await context.SaveChangesAsync();
+            }
         }
 
-        public async Task<IEnumerable<string>> ExportStoreNamesAsync() =>
-            await context.Stores.Select(s => s.Name).AsNoTracking().ToListAsync();
+        public async Task<IEnumerable<Country>> ExportCountriesAsync() =>
+            await context.Countries.AsNoTracking().ToListAsync();
 
-        public async Task<IEnumerable<Store>> ExportStoresAsync() =>
-            await context.Stores.OrderBy(s => s.Name).AsNoTracking().ToListAsync();
-
-        public async Task<IEnumerable<ServiceEntity>> ExportServicesAsync(Guid store) =>
-            await context.Services.Where(s => s.StoreId == store).AsNoTracking().ToListAsync();
+        public async Task<IEnumerable<ServiceEntity>> ExportServicesAsync(int country) =>
+            await context.Services.Where(s => s.CountryId == country).AsNoTracking().ToListAsync();
 
         public async Task<IEnumerable<EventEntity>> ExportEventsAsync(Guid service) =>
-            await context.Events.Where(e => e.ServiceId == service).OrderByDescending(e => e.EpochEndDate).AsNoTracking().ToListAsync();
+            await context.Events.Where(e => e.ServiceId == service).OrderBy(e => e.EpochEndDate).ThenByDescending(e => e.EpochStartDate).AsNoTracking().ToListAsync();
 
-        public async Task ImportStoresAsync(IEnumerable<string> stores)
+        public async Task ImportCountriesAsync(IEnumerable<int> countries)
         {
-            var storeEntities = await ExportStoreNamesAsync();
-            log.LogDebug("Stores in database: {stores}", string.Join(", ", storeEntities));
-            log.LogDebug("Candidate stores: {stores}", string.Join(", ", stores));
-            var absentStores = stores.Except(storeEntities).ToList();
-            if (absentStores.Count == 0)
+            var presentCountries = await context.Countries.Select(s => s.Id).ToListAsync();
+            log.LogDebug("Countries in database: {countries}", string.Join(", ", presentCountries));
+            log.LogDebug("Candidate countries: {countries}", string.Join(", ", countries));
+            var absentCountries = countries.Except(presentCountries).ToList();
+            if (absentCountries.Count == 0)
             {
-                log.LogInformation("No new stores detected");
+                log.LogInformation("No new countries detected");
                 return;
             }
-            log.LogInformation("Importing {count} new stores: {stores}", absentStores.Count, string.Join(", ", absentStores));
-            context.Stores.AddRange(absentStores.Select(x => new Store { Name = x }));
-            await context.SaveChangesAsync();
+            log.LogInformation("Importing {count} new countries: {countries}", absentCountries.Count, string.Join(", ", absentCountries));
+            context.Countries.AddRange(absentCountries.Select(x => new Country(x)));
+            await SaveChangesIdentityInsertAsync();
+        }
+
+        private async Task SaveChangesIdentityInsertAsync()
+        {
+            await context.Database.OpenConnectionAsync();
+            try
+            {
+                await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT dbo.Countries ON");
+                await context.SaveChangesAsync();
+                await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT dbo.Countries OFF");
+            }
+            catch (SqlException exception)
+            {
+                log.LogError(exception, exception.Message);
+                throw;
+            }
+            finally
+            {
+                await context.Database.CloseConnectionAsync();
+            }
         }
     }
 }
