@@ -17,7 +17,7 @@ namespace AppleSystemStatus.Functions
     {
         private static readonly Regex NumberPostfix = new Regex("\\d+$", RegexOptions.Compiled | RegexOptions.Singleline);
 
-        private static readonly Regex CountryPostfix = new Regex("[A-Z]{2}$", RegexOptions.Compiled | RegexOptions.Singleline);
+        private static readonly Regex CountryPostfix = new Regex("-[A-Z]{2}$", RegexOptions.Compiled | RegexOptions.Singleline);
 
         private static readonly Regex RegionRegex = new Regex("-\\w+-", RegexOptions.Compiled | RegexOptions.Singleline);
 
