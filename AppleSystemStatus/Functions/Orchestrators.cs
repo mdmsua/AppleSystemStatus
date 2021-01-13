@@ -30,7 +30,7 @@ namespace AppleSystemStatus.Functions
                 log.LogInformation("Retrieving countries...");
             }
 
-            var countries = await context.CallActivityAsync<int[]>(nameof(Activities.RetrieveCountries), default);
+            var countries = await context.CallActivityAsync<string[]>(nameof(Activities.RetrieveCountries), default);
 
             if (!context.IsReplaying)
             {
