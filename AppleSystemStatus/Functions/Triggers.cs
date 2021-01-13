@@ -11,6 +11,7 @@ using AutoMapper;
 using AppleSystemStatus.Models;
 using System.Linq;
 using DurableTask.Core;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace AppleSystemStatus.Functions
 {
@@ -18,11 +19,13 @@ namespace AppleSystemStatus.Functions
     {
         private readonly RepositoryService repository;
         private readonly IMapper mapper;
+        private readonly HealthCheckService healthCheck;
 
-        public Triggers(RepositoryService repository, IMapper mapper)
+        public Triggers(RepositoryService repository, IMapper mapper, HealthCheckService healthCheck)
         {
             this.repository = repository;
             this.mapper = mapper;
+            this.healthCheck = healthCheck;
         }
 
         [FunctionName(nameof(SystemStatusHttp))]
@@ -84,7 +87,7 @@ namespace AppleSystemStatus.Functions
         [FunctionName(nameof(ServicesExportHttp))]
         public async Task<IActionResult> ServicesExportHttp(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "countries/{country}/services")] HttpRequest req,
-            int country,
+            string country,
             ILogger log)
         {
             var services = await repository.ExportServicesAsync(country);
@@ -100,6 +103,26 @@ namespace AppleSystemStatus.Functions
             var events = await repository.ExportEventsAsync(service);
             return new OkObjectResult(events);
         }
+
+        [FunctionName(nameof(HealthCheck))]
+        public async Task<IActionResult> HealthCheck(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "healthcheck")] HttpRequest req,
+            ILogger log)
+        {
+            var healthReport = await healthCheck.CheckHealthAsync();
+            if (healthReport.Status == HealthStatus.Healthy)
+            {
+                return new OkResult();
+            }
+
+            var exception = new AggregateException(healthReport.Entries.Select(e => e.Value.Exception));
+            log.LogCritical(exception, "App is unhealthy: {0}", string.Join(Environment.NewLine, healthReport.Entries.Select(e => $"{e.Key}: {e.Value.Description}")));
+            return new StatusCodeResult(StatusCodes.Status503ServiceUnavailable);
+        }
+
+        [FunctionName(nameof(Warmup))]
+        public async Task Warmup([WarmupTrigger] WarmupContext warmup) =>
+            await healthCheck.CheckHealthAsync();
 
         private static async Task<string> StartSystemStatusOrchestrationAsync(IDurableOrchestrationClient orchestrator, ILogger log)
         {

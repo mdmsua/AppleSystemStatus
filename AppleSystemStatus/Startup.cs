@@ -43,6 +43,8 @@ namespace AppleSystemStatus
             builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
             builder.Services.AddScoped<RepositoryService>();
+
+            builder.Services.AddHealthChecks().AddDbContextCheck<AppleSystemStatusDbContext>();
         }
     }
 }

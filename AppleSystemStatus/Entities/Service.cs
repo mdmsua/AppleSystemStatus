@@ -13,7 +13,7 @@ namespace AppleSystemStatus.Entities
         public string Name { get; set; } = string.Empty;
 
         [JsonIgnore]
-        public int CountryId { get; set; }
+        public string CountryId { get; set; } = string.Empty;
 #nullable disable
         [JsonIgnore]
         public Country Country { get; set; }
