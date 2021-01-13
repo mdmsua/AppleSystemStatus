@@ -32,14 +32,14 @@ namespace AppleSystemStatus.Functions
         }
 
         [FunctionName(nameof(FetchSystemStatus))]
-        public Task<Response> FetchSystemStatus([ActivityTrigger] int country, ILogger log)
+        public Task<Response> FetchSystemStatus([ActivityTrigger] string country, ILogger log)
         {
             log.LogInformation("Fetching system status for country {country}...", country);
             return systemStatusService.GetSystemStatusAsync(country);
         }
 
         [FunctionName(nameof(RetrieveCountries))]
-        public async Task<IEnumerable<int>> RetrieveCountries([ActivityTrigger] IDurableActivityContext ctx, ILogger log)
+        public async Task<IEnumerable<string>> RetrieveCountries([ActivityTrigger] IDurableActivityContext ctx, ILogger log)
         {
             using var scope = log.BeginScope(nameof(RetrieveCountries));
             log.LogInformation("Retrieving countries...");
@@ -48,17 +48,17 @@ namespace AppleSystemStatus.Functions
         }
 
         [FunctionName(nameof(FetchCountrySupport))]
-        public async Task<KeyValuePair<int, bool>> FetchCountrySupport([ActivityTrigger] int country, ILogger log)
+        public async Task<KeyValuePair<string, bool>> FetchCountrySupport([ActivityTrigger] string country, ILogger log)
         {
             using var scope = log.BeginScope(nameof(FetchCountrySupport));
             log.LogDebug("Fetching {country} country support...", country);
             bool isSupported = await systemStatusService.IsCountrySupportedAsync(country);
             log.LogDebug("Country {country is {support}", country, isSupported ? "supported" : "not supported");
-            return new KeyValuePair<int, bool>(country, isSupported);
+            return new KeyValuePair<string, bool>(country, isSupported);
         }
 
         [FunctionName(nameof(ImportCountries))]
-        public Task ImportCountries([ActivityTrigger] int[] countries, ILogger log)
+        public Task ImportCountries([ActivityTrigger] string[] countries, ILogger log)
         {
             using var scope = log.BeginScope(nameof(ImportCountries));
             log.LogInformation("Importing countries...");
