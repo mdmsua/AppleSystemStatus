@@ -44,6 +44,7 @@ namespace AppleSystemStatus.Profiles
                     "completed" => EventStatus.Completed,
                     "ongoing" => EventStatus.Ongoing,
                     "resolved" => EventStatus.Resolved,
+                    "upcoming" => EventStatus.Upcoming,
                     _ => throw new NotSupportedException($"{source.EventStatus} is not supported")
                 };
         }

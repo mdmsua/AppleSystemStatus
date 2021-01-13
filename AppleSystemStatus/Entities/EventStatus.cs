@@ -4,6 +4,7 @@ namespace AppleSystemStatus.Entities
     {
         Completed = 0,
         Ongoing = 1,
-        Resolved = 2
+        Resolved = 2,
+        Upcoming = 3
     }
 }
