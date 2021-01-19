@@ -10,7 +10,15 @@ env:
   IMAGE_REPOSITORY: canary.azurecr.io/aaplss
 
 jobs:
+  provision:
+    environment: canary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
   build:
+    needs: provision
     environment: canary
     runs-on: ubuntu-latest
     steps:
