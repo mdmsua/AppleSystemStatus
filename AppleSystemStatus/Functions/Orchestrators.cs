@@ -38,18 +38,19 @@ namespace AppleSystemStatus.Functions
                 log.LogInformation("Fetching system status for counties...");
             }
 
-            var fetchTasks = countries.Select(region => context.CallActivityAsync<Response>(nameof(Activities.FetchSystemStatus), region)).ToArray();
+            var tasks = countries.Select(region => context.CallActivityAsync<Response>(nameof(Activities.FetchSystemStatus), region)).ToArray();
 
-            var fetchResults = await Task.WhenAll(fetchTasks);
+            var responses = await Task.WhenAll(tasks);
 
             if (!context.IsReplaying)
             {
                 log.LogInformation("System status fetching done. Importing...");
             }
 
-            var importTasks = fetchResults.Select(result => context.CallActivityAsync(nameof(Activities.ImportSystemStatus), result));
-
-            await Task.WhenAll(importTasks);
+            foreach (var response in responses)
+            {
+                await context.CallActivityAsync(nameof(Activities.ImportSystemStatus), response);
+            }
 
             if (!context.IsReplaying)
             {
