@@ -11,7 +11,6 @@ using AppleSystemStatus.Entities;
 using System.Linq;
 using AutoMapper;
 using System;
-using Microsoft.Data.SqlClient;
 
 namespace AppleSystemStatus.Services
 {
@@ -28,17 +27,15 @@ namespace AppleSystemStatus.Services
             this.log = log;
         }
 
-        public async Task ImportSystemStatusAsync(int country, IEnumerable<ServiceModel> services)
+        public async Task ImportSystemStatusAsync(string country, IEnumerable<ServiceModel> services)
         {
             log.LogDebug("Checking if country {country} exists...", country);
-            var useIdentityInsert = false;
             var countryEntity = await context.Countries.Include(x => x.Services).ThenInclude(x => x.Events).SingleOrDefaultAsync(x => x.Id == country);
             if (countryEntity is null)
             {
                 log.LogDebug("Country {country} doesn't exist. Creating...", country);
                 countryEntity = new Country(country);
                 await context.Countries.AddAsync(countryEntity);
-                useIdentityInsert = true;
             }
             log.LogDebug("Checking {country} services...", country);
             foreach (var service in services)
@@ -78,26 +75,19 @@ namespace AppleSystemStatus.Services
                 }
                 serviceEntity.Status = serviceEntity.Events.SingleOrDefault(e => !e.EpochEndDate.HasValue)?.StatusType;
             }
-            if (useIdentityInsert)
-            {
-                await SaveChangesIdentityInsertAsync();
-            }
-            else
-            {
-                await context.SaveChangesAsync();
-            }
+            await context.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<Country>> ExportCountriesAsync() =>
             await context.Countries.AsNoTracking().ToListAsync();
 
-        public async Task<IEnumerable<ServiceEntity>> ExportServicesAsync(int country) =>
+        public async Task<IEnumerable<ServiceEntity>> ExportServicesAsync(string country) =>
             await context.Services.Where(s => s.CountryId == country).AsNoTracking().ToListAsync();
 
         public async Task<IEnumerable<EventEntity>> ExportEventsAsync(Guid service) =>
             await context.Events.Where(e => e.ServiceId == service).OrderBy(e => e.EpochEndDate).ThenByDescending(e => e.EpochStartDate).AsNoTracking().ToListAsync();
 
-        public async Task ImportCountriesAsync(IEnumerable<int> countries)
+        public async Task ImportCountriesAsync(IEnumerable<string> countries)
         {
             var presentCountries = await context.Countries.Select(s => s.Id).ToListAsync();
             log.LogDebug("Countries in database: {countries}", string.Join(", ", presentCountries));
@@ -110,27 +100,7 @@ namespace AppleSystemStatus.Services
             }
             log.LogInformation("Importing {count} new countries: {countries}", absentCountries.Count, string.Join(", ", absentCountries));
             context.Countries.AddRange(absentCountries.Select(x => new Country(x)));
-            await SaveChangesIdentityInsertAsync();
-        }
-
-        private async Task SaveChangesIdentityInsertAsync()
-        {
-            await context.Database.OpenConnectionAsync();
-            try
-            {
-                await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT dbo.Countries ON");
-                await context.SaveChangesAsync();
-                await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT dbo.Countries OFF");
-            }
-            catch (SqlException exception)
-            {
-                log.LogError(exception, exception.Message);
-                throw;
-            }
-            finally
-            {
-                await context.Database.CloseConnectionAsync();
-            }
+            await context.SaveChangesAsync();
         }
     }
 }

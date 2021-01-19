@@ -36,6 +36,7 @@ namespace AppleSystemStatus
             modelBuilder.Entity<Country>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasMaxLength(8);
                 entity.HasMany(e => e.Services).WithOne(x => x.Country).HasForeignKey(x => x.CountryId).IsRequired(true);
             });
 
@@ -43,7 +44,9 @@ namespace AppleSystemStatus
             {
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(x => x.Name);
+                entity.Property(x => x.Name).HasMaxLength(96);
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
+                entity.Property(e => e.CountryId).HasMaxLength(8);
                 entity.HasMany(e => e.Events).WithOne(x => x.Service).HasForeignKey(x => x.ServiceId).IsRequired(true);
             });
 

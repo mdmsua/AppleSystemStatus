@@ -11,12 +11,12 @@ namespace AppleSystemStatus.Entities
 
         }
 
-        public Country(int id)
+        public Country(string id)
         {
             Id = id;
         }
 
-        public int Id { get; set; }
+        public string Id { get; set; } = string.Empty;
 
         [JsonIgnore]
         public ICollection<Service> Services { get; set; } = Enumerable.Empty<Service>().ToList();
