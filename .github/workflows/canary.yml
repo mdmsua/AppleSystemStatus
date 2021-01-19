@@ -9,7 +9,25 @@ env:
   IMAGE_REPOSITORY: canary.azurecr.io/aaplss
 
 jobs:
-  main:
+  build:
+    environment: canary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.x
+      - name: Restore tools
+        run: dotnet tool restore
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build solution
+        run: dotnet build --no-restore --configuration Release
+      - name: Update database
+        run: dotnet ef database update --no-build --configuration Release --project AppleSystemStatus --connection ${{ secrets.DATABASE_CONNECTION_STRING }}
+
+  deploy:
     environment: canary
     runs-on: ubuntu-latest
     steps:
@@ -29,6 +47,5 @@ jobs:
           push: true
           tags: ${{ env.IMAGE_REPOSITORY }}:latest
           build-args: |
-            DATABASE_CONNECTION_STRING=${{ secrets.DATABASE_CONNECTION_STRING }}
             VAULT_URI=${{ secrets.VAULT_URI }}
             VAULT_SECRET=${{ secrets.VAULT_SECRET }}
