@@ -25,9 +25,12 @@ jobs:
       - name: Build solution
         run: dotnet build --no-restore --configuration Release
       - name: Update database
-        run: dotnet ef database update --no-build --configuration Release --project AppleSystemStatus --connection ${{ secrets.DATABASE_CONNECTION_STRING }}
+        run: dotnet ef database update --no-build --configuration Release --project AppleSystemStatus
+        env:
+          DATABASE_CONNECTION_STRING: ${{ secrets.DATABASE_CONNECTION_STRING }}
 
   deploy:
+    needs: build
     environment: canary
     runs-on: ubuntu-latest
     steps:
