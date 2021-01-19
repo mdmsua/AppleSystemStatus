@@ -27,7 +27,7 @@ jobs:
       - name: Update database
         run: dotnet ef database update --no-build --configuration Release --project AppleSystemStatus
         env:
-          DATABASE_CONNECTION_STRING: ${{ secrets.DATABASE_CONNECTION_STRING }}
+          DatabaseConnectionString: ${{ secrets.DATABASE_CONNECTION_STRING }}
 
   deploy:
     needs: build
