@@ -28,7 +28,7 @@ jobs:
               -TemplateParameterFile .azure/template.parameters.json `
               -tenantId ${{ secrets.TENANT_ID }} `
               -objectId ${{ secrets.OBJECT_ID }} `
-              -sqlServerSaPLogin ${{ secrets.SA_USERNAME }} `
+              -sqlServerSaLogin ${{ secrets.SA_USERNAME }} `
               -sqlServerSaPassword (ConvertTo-SecureString "${{ secrets.SA_PASSWORD }}" -AsPlainText) `
               -sqlServerLogin ${{ secrets.DB_USERNAME }} `
               -sqlServerPassword (ConvertTo-SecureString "${{ secrets.DB_PASSWORD }}" -AsPlainText) `
@@ -44,7 +44,7 @@ jobs:
               -Name ${{ github.sha }} `
               -tenantId ${{ secrets.TENANT_ID }} `
               -objectId ${{ secrets.OBJECT_ID }} `
-              -sqlServerSaPLogin ${{ secrets.SA_USERNAME }} `
+              -sqlServerSaLogin ${{ secrets.SA_USERNAME }} `
               -sqlServerSaPassword (ConvertTo-SecureString "${{ secrets.SA_PASSWORD }}" -AsPlainText) `
               -sqlServerLogin ${{ secrets.DB_USERNAME }} `
               -sqlServerPassword (ConvertTo-SecureString "${{ secrets.DB_PASSWORD }}" -AsPlainText)
