@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: .azure
+        working-directory: ./.azure
     steps:
       - uses: azure/login@v1
         with:
