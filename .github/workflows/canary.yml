@@ -21,32 +21,32 @@ jobs:
       - uses: azure/powershell@v1
         with:
           inlineScript: |
-            Test-AzResourceGroupDeployment
-              -ResourceGroupName canary
-              -TemplateFile ./.azure/template.json
-              -TemplateParameterFile ./.azure/template.parameters.json
-              -tenantId ${{ secrets.TENANT_ID }}
-              -objectId ${{ secrets.OBJECT_ID }}
-              -sqlServerSaPLogin ${{ secrets.SA_USERNAME }}
-              -sqlServerSaPassword (ConvertTo-SecureString "${{ secrets.SA_PASSWORD }}" -AsPlainText)
-              -sqlServerLogin ${{ secrets.DB_USERNAME }}
-              -sqlServerPassword (ConvertTo-SecureString "${{ secrets.DB_PASSWORD }}" -AsPlainText)
+            Test-AzResourceGroupDeployment `
+              -ResourceGroupName canary `
+              -TemplateFile ./.azure/template.json `
+              -TemplateParameterFile ./.azure/template.parameters.json `
+              -tenantId ${{ secrets.TENANT_ID }} `
+              -objectId ${{ secrets.OBJECT_ID }} `
+              -sqlServerSaPLogin ${{ secrets.SA_USERNAME }} `
+              -sqlServerSaPassword (ConvertTo-SecureString "${{ secrets.SA_PASSWORD }}" -AsPlainText) `
+              -sqlServerLogin ${{ secrets.DB_USERNAME }} `
+              -sqlServerPassword (ConvertTo-SecureString "${{ secrets.DB_PASSWORD }}" -AsPlainText) `
               -Verbose
           azPSVersion: "latest"
       - uses: azure/powershell@v1
         with:
           inlineScript: |
-            New-AzResourceGroupDeployment
-              -ResourceGroupName canary
-              -TemplateFile ./.azure/template.json
-              -TemplateParameterFile ./.azure/template.parameters.json
-              -Name ${{ github.sha }}
-              -tenantId ${{ secrets.TENANT_ID }}
-              -objectId ${{ secrets.OBJECT_ID }}
-              -sqlServerSaPLogin ${{ secrets.SA_USERNAME }}
-              -sqlServerSaPassword (ConvertTo-SecureString "${{ secrets.SA_PASSWORD }}" -AsPlainText)
-              -sqlServerLogin ${{ secrets.DB_USERNAME }}
-              -sqlServerPassword (ConvertTo-SecureString "${{ secrets.DB_PASSWORD }}" -AsPlainText)
+            New-AzResourceGroupDeployment `
+              -ResourceGroupName canary `
+              -TemplateFile ./.azure/template.json `
+              -TemplateParameterFile ./.azure/template.parameters.json `
+              -Name ${{ github.sha }} `
+              -tenantId ${{ secrets.TENANT_ID }} `
+              -objectId ${{ secrets.OBJECT_ID }} `
+              -sqlServerSaPLogin ${{ secrets.SA_USERNAME }} `
+              -sqlServerSaPassword (ConvertTo-SecureString "${{ secrets.SA_PASSWORD }}" -AsPlainText) `
+              -sqlServerLogin ${{ secrets.DB_USERNAME }} `
+              -sqlServerPassword (ConvertTo-SecureString "${{ secrets.DB_PASSWORD }}" -AsPlainText) `
           azPSVersion: "latest"
 
   build:
