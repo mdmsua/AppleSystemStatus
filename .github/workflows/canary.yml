@@ -23,6 +23,7 @@ jobs:
           template: .azure/template.json
           parameters: sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerPassword=${{ secrets.DB_PASSWORD }} objectId=${{ secrets.OBJECT_ID }} tenantId=${{ secrets.TENANT_ID }}
           deploymentName: github
+          deploymentMode: Validate
 
   build:
     needs: provision
