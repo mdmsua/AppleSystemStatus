@@ -13,6 +13,9 @@ jobs:
   provision:
     environment: canary
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .azure
     steps:
       - uses: azure/login@v1
         with:
@@ -23,8 +26,8 @@ jobs:
           inlineScript: |
             Test-AzResourceGroupDeployment `
               -ResourceGroupName canary `
-              -TemplateFile ./.azure/template.json `
-              -TemplateParameterFile ./.azure/template.parameters.json `
+              -TemplateFile ./template.json `
+              -TemplateParameterFile ./template.parameters.json `
               -tenantId ${{ secrets.TENANT_ID }} `
               -objectId ${{ secrets.OBJECT_ID }} `
               -sqlServerSaPLogin ${{ secrets.SA_USERNAME }} `
@@ -38,15 +41,15 @@ jobs:
           inlineScript: |
             New-AzResourceGroupDeployment `
               -ResourceGroupName canary `
-              -TemplateFile ./.azure/template.json `
-              -TemplateParameterFile ./.azure/template.parameters.json `
+              -TemplateFile ./template.json `
+              -TemplateParameterFile ./template.parameters.json `
               -Name ${{ github.sha }} `
               -tenantId ${{ secrets.TENANT_ID }} `
               -objectId ${{ secrets.OBJECT_ID }} `
               -sqlServerSaPLogin ${{ secrets.SA_USERNAME }} `
               -sqlServerSaPassword (ConvertTo-SecureString "${{ secrets.SA_PASSWORD }}" -AsPlainText) `
               -sqlServerLogin ${{ secrets.DB_USERNAME }} `
-              -sqlServerPassword (ConvertTo-SecureString "${{ secrets.DB_PASSWORD }}" -AsPlainText) `
+              -sqlServerPassword (ConvertTo-SecureString "${{ secrets.DB_PASSWORD }}" -AsPlainText)
           azPSVersion: "latest"
 
   build:
