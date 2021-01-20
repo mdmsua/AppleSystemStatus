@@ -20,7 +20,7 @@ jobs:
       - uses: azure/arm-deploy@v1
         with:
           resourceGroupName: canary
-          template: ./azure/template.json
+          template: ./.azure/template.json
           parameters: sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerPassword=${{ secrets.DB_PASSWORD }} objectId=${{ secrets.OBJECT_ID }} tenantId=${{ secrets.TENANT_ID }}
           deploymentName: github-${GITHUB_RUN_ID}
 
