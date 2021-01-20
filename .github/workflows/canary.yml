@@ -17,12 +17,37 @@ jobs:
       - uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - uses: azure/arm-deploy@v1
+          enable-AzPSSession: true
+      - uses: azure/powershell@v1
         with:
-          resourceGroupName: canary
-          template: .azure/template.json
-          parameters: sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerPassword=${{ secrets.DB_PASSWORD }} objectId=${{ secrets.OBJECT_ID }} tenantId=${{ secrets.TENANT_ID }}
-          deploymentName: ${{ github.sha }}
+          inlineScript: |
+            Test-AzResourceGroupDeployment
+              -ResourceGroupName canary
+              -TemplateFile ./.azure/template.json
+              -TemplateParameterFile ./.azure/template.parameters.json
+              -tenantId ${{ secrets.TENANT_ID }}
+              -objectId ${{ secrets.OBJECT_ID }}
+              -sqlServerSaPLogin ${{ secrets.SA_USERNAME }}
+              -sqlServerSaPassword (ConvertTo-SecureString "${{ secrets.SA_PASSWORD }}" -AsPlainText)
+              -sqlServerLogin ${{ secrets.DB_USERNAME }}
+              -sqlServerPassword (ConvertTo-SecureString "${{ secrets.DB_PASSWORD }}" -AsPlainText)
+              -Verbose
+          azPSVersion: "latest"
+      - uses: azure/powershell@v1
+        with:
+          inlineScript: |
+            New-AzResourceGroupDeployment
+              -ResourceGroupName canary
+              -TemplateFile ./.azure/template.json
+              -TemplateParameterFile ./.azure/template.parameters.json
+              -Name ${{ github.sha }}
+              -tenantId ${{ secrets.TENANT_ID }}
+              -objectId ${{ secrets.OBJECT_ID }}
+              -sqlServerSaPLogin ${{ secrets.SA_USERNAME }}
+              -sqlServerSaPassword (ConvertTo-SecureString "${{ secrets.SA_PASSWORD }}" -AsPlainText)
+              -sqlServerLogin ${{ secrets.DB_USERNAME }}
+              -sqlServerPassword (ConvertTo-SecureString "${{ secrets.DB_PASSWORD }}" -AsPlainText)
+          azPSVersion: "latest"
 
   build:
     needs: provision
