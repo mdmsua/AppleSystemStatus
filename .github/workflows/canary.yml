@@ -12,7 +12,7 @@ env:
 jobs:
   provision:
     environment: canary
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: azure/login@v1
@@ -52,7 +52,7 @@ jobs:
   build:
     needs: provision
     environment: canary
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Setup .NET
@@ -75,7 +75,7 @@ jobs:
   deploy:
     needs: build
     environment: canary
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Setup Docker Buildx
