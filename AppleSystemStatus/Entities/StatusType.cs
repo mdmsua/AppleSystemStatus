@@ -4,6 +4,7 @@ namespace AppleSystemStatus.Entities
     {
         Maintenance = 0,
         Issue = 1,
-        Outage = 2
+        Outage = 2,
+        Empty = 3
     }
 }

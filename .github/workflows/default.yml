@@ -95,5 +95,6 @@ jobs:
           push: true
           tags: ${{ env.IMAGE_REPOSITORY }}:latest,${{ env.IMAGE_REPOSITORY }}:${{ github.sha }},${{ env.IMAGE_REPOSITORY }}:${{ steps.vars.outputs.tag }}
           build-args: |
+            VERSION=${{ steps.vars.outputs.tag }}
             VAULT_URI=${{ secrets.VAULT_URI }}
             VAULT_SECRET=${{ secrets.VAULT_SECRET }}
