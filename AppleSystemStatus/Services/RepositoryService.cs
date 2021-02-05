@@ -38,21 +38,39 @@ namespace AppleSystemStatus.Services
                 await context.Countries.AddAsync(countryEntity);
             }
             log.LogDebug("Checking {country} services...", country);
+            ServiceEntity serviceEntity;
             foreach (var service in services)
             {
                 log.LogDebug("Service {service}...", service.ServiceName);
-                var serviceEntity = countryEntity.Services.SingleOrDefault(x => x.Name == service.ServiceName);
-                if (serviceEntity is null)
+                try
                 {
-                    log.LogDebug("Service {service} doesn't exist. Creating...", service.ServiceName);
-                    serviceEntity = new ServiceEntity { Name = service.ServiceName };
-                    countryEntity.Services.Add(serviceEntity);
+                    serviceEntity = countryEntity.Services.SingleOrDefault(x => x.Name == service.ServiceName);
+                    if (serviceEntity is null)
+                    {
+                        log.LogDebug("Service {service} doesn't exist. Creating...", service.ServiceName);
+                        serviceEntity = new ServiceEntity { Name = service.ServiceName };
+                        countryEntity.Services.Add(serviceEntity);
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    log.LogError("InvalidOperationException enumerating services for {0}", service.ServiceName);
+                    throw;
                 }
                 log.LogDebug("Checking {service} events...", service.ServiceName);
+                EventEntity eventEntity;
                 foreach (var @event in service.Events)
                 {
                     log.LogDebug("Event {EpochStartDate}...", @event.EpochStartDate);
-                    var eventEntity = serviceEntity.Events.SingleOrDefault(x => x.EpochStartDate == @event.EpochStartDate);
+                    try
+                    {
+                        eventEntity = serviceEntity.Events.SingleOrDefault(x => x.EpochStartDate == @event.EpochStartDate);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        log.LogError("InvalidOperationException enumerating events for {0} in {1}", @event.EpochStartDate, service.ServiceName);
+                        throw;
+                    }
                     if (eventEntity is null)
                     {
                         log.LogDebug("Event {EpochStartDate} doesn't exist. Creating...", @event.EpochStartDate);
