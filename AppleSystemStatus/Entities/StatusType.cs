@@ -5,6 +5,6 @@ namespace AppleSystemStatus.Entities
         Maintenance = 0,
         Issue = 1,
         Outage = 2,
-        Empty = 3
+        Problem = 3
     }
 }
