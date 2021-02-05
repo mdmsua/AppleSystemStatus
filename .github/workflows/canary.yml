@@ -1,22 +1,87 @@
 name: default
 
 on:
+  workflow_dispatch:
   push:
-    branches:
+    branches-ignore:
       - canary
 
 env:
   IMAGE_REPOSITORY: canary.azurecr.io/aaplss
 
 jobs:
-  main:
-    runs-on: ubuntu-latest
+  provision:
+    environment: canary
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+      - uses: azure/powershell@v1
+        with:
+          inlineScript: |
+            Test-AzResourceGroupDeployment `
+              -ResourceGroupName canary `
+              -TemplateFile .azure/template.json `
+              -TemplateParameterFile .azure/template.parameters.json `
+              -tenantId ${{ secrets.TENANT_ID }} `
+              -objectId ${{ secrets.OBJECT_ID }} `
+              -sqlServerSaLogin ${{ secrets.SA_USERNAME }} `
+              -sqlServerSaPassword (ConvertTo-SecureString "${{ secrets.SA_PASSWORD }}" -AsPlainText) `
+              -sqlServerLogin ${{ secrets.DB_USERNAME }} `
+              -sqlServerPassword (ConvertTo-SecureString "${{ secrets.DB_PASSWORD }}" -AsPlainText)
+          azPSVersion: "latest"
+      - uses: azure/powershell@v1
+        with:
+          inlineScript: |
+            New-AzResourceGroupDeployment `
+              -ResourceGroupName canary `
+              -TemplateFile .azure/template.json `
+              -TemplateParameterFile .azure/template.parameters.json `
+              -Name ${{ github.sha }} `
+              -tenantId ${{ secrets.TENANT_ID }} `
+              -objectId ${{ secrets.OBJECT_ID }} `
+              -sqlServerSaLogin ${{ secrets.SA_USERNAME }} `
+              -sqlServerSaPassword (ConvertTo-SecureString "${{ secrets.SA_PASSWORD }}" -AsPlainText) `
+              -sqlServerLogin ${{ secrets.DB_USERNAME }} `
+              -sqlServerPassword (ConvertTo-SecureString "${{ secrets.DB_PASSWORD }}" -AsPlainText)
+          azPSVersion: "latest"
+
+  build:
+    needs: provision
+    environment: canary
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.x
+      - name: Restore tools
+        run: dotnet tool restore
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build solution
+        run: dotnet build --no-restore --configuration Release
+      - name: Update database
+        run: dotnet ef database update --no-build --configuration Release --project AppleSystemStatus
+        env:
+          DatabaseConnectionString: "Server=tcp:canary.database.windows.net,1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${{ secrets.SA_USERNAME }};Password=${{ secrets.SA_PASSWORD }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+          ApplicationUsername: ${{ secrets.DB_USERNAME }}
+          ApplicationPassword: ${{ secrets.DB_PASSWORD }}
+
+  deploy:
+    needs: build
+    environment: canary
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v2
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Login to Docker Registry
-        uses: docker/login-action@v1 
+        uses: docker/login-action@v1
         with:
           registry: canary.azurecr.io
           username: canary
@@ -26,8 +91,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ${{ env.IMAGE_REPOSITORY }}:latest
+          tags: ${{ env.IMAGE_REPOSITORY }}:latest,${{ env.IMAGE_REPOSITORY }}:${{ github.sha }}
           build-args: |
-            DATABASE_CONNECTION_STRING=${{ secrets.DATABASE_CONNECTION_STRING }}
             VAULT_URI=${{ secrets.VAULT_URI }}
             VAULT_SECRET=${{ secrets.VAULT_SECRET }}

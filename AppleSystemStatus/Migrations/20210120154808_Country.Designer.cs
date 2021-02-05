@@ -4,14 +4,16 @@ using AppleSystemStatus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace AppleSystemStatus.Migrations
 {
     [DbContext(typeof(AppleSystemStatusDbContext))]
-    partial class AppleSystemStatusDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210120154808_Country")]
+    partial class Country
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
