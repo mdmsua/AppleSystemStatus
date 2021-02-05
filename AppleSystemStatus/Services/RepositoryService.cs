@@ -73,7 +73,7 @@ namespace AppleSystemStatus.Services
                         }
                     }
                 }
-                serviceEntity.Status = serviceEntity.Events.SingleOrDefault(e => !e.EpochEndDate.HasValue)?.StatusType;
+                serviceEntity.Status = serviceEntity.Events.FirstOrDefault(e => !e.EpochEndDate.HasValue)?.StatusType;
             }
             await context.SaveChangesAsync();
         }
