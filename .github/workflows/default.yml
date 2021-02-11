@@ -19,7 +19,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
       - uses: azure/powershell@v1
-        if: $ {{ false }}
+        if: ${{ false }}
         with:
           inlineScript: |
             Test-AzResourceGroupDeployment `
@@ -35,7 +35,7 @@ jobs:
               -resourceGroupNameFromTemplate mdmsua
           azPSVersion: "latest"
       - uses: azure/powershell@v1
-        if: $ {{ false }}
+        if: ${{ false }}
         with:
           inlineScript: |
             New-AzResourceGroupDeployment `
