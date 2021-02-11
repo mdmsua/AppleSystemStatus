@@ -12,6 +12,7 @@ env:
 jobs:
   provision:
     runs-on: ubuntu-20.04
+    if: ${{ false }}
     steps:
       - uses: actions/checkout@v2
       - uses: azure/login@v1
@@ -19,7 +20,6 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
       - uses: azure/powershell@v1
-        if: ${{ false }}
         with:
           inlineScript: |
             Test-AzResourceGroupDeployment `
@@ -35,7 +35,6 @@ jobs:
               -resourceGroupNameFromTemplate mdmsua
           azPSVersion: "latest"
       - uses: azure/powershell@v1
-        if: ${{ false }}
         with:
           inlineScript: |
             New-AzResourceGroupDeployment `
