@@ -4,6 +4,7 @@
 
 .DS_Store
 .azure/*.ps1
+.vscode/
 
 ### ASPNETCore ###
 ## Ignore Visual Studio temporary files, build results, and

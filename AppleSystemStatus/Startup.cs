@@ -45,6 +45,8 @@ namespace AppleSystemStatus
             builder.Services.AddScoped<RepositoryService>();
 
             builder.Services.AddHealthChecks().AddDbContextCheck<AppleSystemStatusDbContext>();
+
+            builder.Services.AddApplicationInsightsTelemetry();
         }
     }
 }
