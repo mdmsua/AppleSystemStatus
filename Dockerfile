@@ -7,7 +7,6 @@ ARG VAULT_URI
 ARG VAULT_SECRET
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true \
-    AzureWebJobsStorage=${AZURE_WEBJOBS_STORAGE} \
     VaultUri=${VAULT_URI} \
     VaultSecret=${VAULT_SECRET}
 COPY --from=build ["/home/site/wwwroot", "/home/site/wwwroot"]
