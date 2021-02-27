@@ -35,6 +35,7 @@ namespace AppleSystemStatus.Profiles
                     "Maintenance" => StatusType.Maintenance,
                     "Issue" => StatusType.Issue,
                     "Outage" => StatusType.Outage,
+                    "Performance" => StatusType.Performance,
                     "" => StatusType.Problem,
                     _ => throw new NotSupportedException($"{source.StatusType} is not supported")
                 };
