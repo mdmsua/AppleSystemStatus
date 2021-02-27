@@ -44,6 +44,7 @@ namespace AppleSystemStatus
             {
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(x => x.Name);
+                entity.HasIndex(e => new { e.Name, e.CountryId }).IsUnique(true);
                 entity.Property(x => x.Name).HasMaxLength(96);
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
                 entity.Property(e => e.CountryId).HasMaxLength(8);
