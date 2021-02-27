@@ -27,7 +27,8 @@ namespace AppleSystemStatus
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
+                optionsBuilder.UseSqlServer("Server=tcp:mdmsua.database.windows.net,1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=dmytro;Password=kQs9CbGWwW8NSLXG;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
+                // optionsBuilder.UseSqlServer(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
             }
         }
 
@@ -44,6 +45,7 @@ namespace AppleSystemStatus
             {
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(x => x.Name);
+                entity.HasIndex(e => new { e.Name, e.CountryId }).IsUnique(true);
                 entity.Property(x => x.Name).HasMaxLength(96);
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
                 entity.Property(e => e.CountryId).HasMaxLength(8);
