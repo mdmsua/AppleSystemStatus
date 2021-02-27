@@ -55,7 +55,7 @@ namespace AppleSystemStatus.Services
                 catch (InvalidOperationException)
                 {
                     log.LogError("InvalidOperationException enumerating services for {0}", service.ServiceName);
-                    throw;
+                    throw new ApplicationException($"{country} contains more than one {service.ServiceName}");
                 }
                 log.LogDebug("Checking {service} events...", service.ServiceName);
                 EventEntity eventEntity;
