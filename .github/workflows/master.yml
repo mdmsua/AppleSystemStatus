@@ -19,7 +19,7 @@ jobs:
           enable-AzPSSession: true
       - uses: azure/cli@v1
         with:
-          inlineScript: az deployment group validate -g mdmsua -f ./main.bicep --no-prompt -p globalPrefix=mdmsua objectId=${{ secrets.OBJECT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }} siteName=aaplss
+          inlineScript: az deployment group validate -g mdmsua -f ./.azure/main.bicep --no-prompt -p globalPrefix=mdmsua objectId=${{ secrets.OBJECT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }} siteName=aaplss
 
   build:
     runs-on: ubuntu-20.04
