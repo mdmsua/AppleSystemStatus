@@ -17,12 +17,17 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
+      - run: |
+          curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x ./bicep
+          ./bicep build main.bicep
+          rm ./bicep
+        working-directory: .azure
       - uses: azure/cli@v1
         with:
           inlineScript: |
             cd .azure
-            ls
-            az deployment group validate -g mdmsua -f ./main.bicep --no-prompt -p globalPrefix=mdmsua objectId=${{ secrets.OBJECT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }} siteName=aaplss
+            az deployment group validate -g mdmsua -f ./main.json --no-prompt -p globalPrefix=mdmsua objectId=${{ secrets.OBJECT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }} siteName=aaplss
 
   build:
     runs-on: ubuntu-20.04
