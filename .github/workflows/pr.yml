@@ -7,7 +7,7 @@ on:
 
 env:
   CONTAINER_REGISTRY: mdmsua.azurecr.io
-  IMAGE_REPOSITORY: ${{ env.CONTAINER_REGISTRY }}/aaplss
+  IMAGE_REPOSITORY: mdmsua.azurecr.io/aaplss
 
 jobs:
   provision:
