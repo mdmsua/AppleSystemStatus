@@ -1,0 +1,79 @@
+name: main
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  CONTAINER_REGISTRY: mdmsua.azurecr.io
+  IMAGE_REPOSITORY: ${{ env.CONTAINER_REGISTRY }}/aaplss
+
+jobs:
+  provision:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+      - run: |
+          curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x ./bicep
+          ./bicep build main.bicep
+          rm ./bicep
+        working-directory: .azure
+      - uses: azure/cli@v1
+        with:
+          inlineScript: |
+            cd .azure
+            az deployment group validate -g mdmsua -f ./main.json --no-prompt -p globalPrefix=mdmsua objectId=${{ secrets.OBJECT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }} siteName=aaplss
+            az deployment group create -g mdmsua -f ./main.json -n $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S") --no-prompt -p globalPrefix=mdmsua objectId=${{ secrets.OBJECT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }} siteName=aaplss
+
+  build:
+    runs-on: ubuntu-20.04
+    needs: provision
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.x
+      - run: |
+          dotnet tool restore
+          dotnet restore
+          dotnet build --no-restore --configuration Release
+          dotnet test --no-build --configuration Release
+          dotnet ef database update --no-build --configuration Release --project AppleSystemStatus
+        env:
+          ConnectionStrings__AppleSystemStatus: "Server=tcp:mdmsua.database.windows.net,1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${{ secrets.SA_USERNAME }};Password=${{ secrets.SA_PASSWORD }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+          ApplicationUsername: ${{ secrets.DB_USERNAME }}
+          ApplicationPassword: ${{ secrets.DB_PASSWORD }}
+
+  deploy:
+    runs-on: ubuntu-20.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: gittools/actions/gitversion/setup@v0.9.9
+      - uses: gittools/actions/gitversion/execute@v0.9.9
+        id: gitversion
+        with:
+          useConfigFile: true
+      - uses: docker/setup-buildx-action@v1
+      - uses: docker/login-action@v1
+        with:
+          registry: ${{ env.CONTAINER_REGISTRY }}
+          username: mdmsua
+          password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+      - uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: |
+            ${{ env.IMAGE_REPOSITORY }}:latest
+            ${{ env.IMAGE_REPOSITORY }}:${{ github.sha }}
+            ${{ env.IMAGE_REPOSITORY }}:${{ steps.gitversion.outputs.semVer }}
+          args: |
+            VERSION=${{ steps.gitversion.outputs.assemblySemVer }}
