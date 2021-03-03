@@ -56,7 +56,7 @@ resource database 'Microsoft.Sql/servers/databases@2020-08-01-preview' = {
 }
 
 resource canary 'Microsoft.Sql/servers/databases@2020-08-01-preview' = {
-  name: '${name}/AppleSystemStatus'
+  name: '${name}/CanarySystemStatus'
   location: location
   dependsOn: [
     server

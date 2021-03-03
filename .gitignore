@@ -3,8 +3,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudio,visualstudiocode,csharp,aspnetcore
 
 .DS_Store
-.azure/*.ps1
-.azure/*.json
+.azure/*[.ps1, .json, .sh]
 .vscode/
 
 ### ASPNETCore ###
