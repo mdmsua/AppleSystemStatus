@@ -17,7 +17,7 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
-      - uses: azure/cli@1
+      - uses: azure/cli@v1
         with:
           inlineScript: |
             cd .azure
