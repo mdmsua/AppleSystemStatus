@@ -21,7 +21,7 @@ jobs:
         with:
           inlineScript: |
             cd .azure
-            az bicep build main.bicep
+            az bicep build --files main.bicep
             az deployment group validate -g mdmsua -f ./main.json --no-prompt -p globalPrefix=mdmsua objectId=${{ secrets.OBJECT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }} siteName=aaplss
 
   build:
