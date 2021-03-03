@@ -4,10 +4,6 @@ using System.Net.Security;
 using System.Reflection;
 
 using AppleSystemStatus.Services;
-
-using AutoMapper;
-using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -24,15 +20,7 @@ namespace AppleSystemStatus
             builder.Services.AddDbContext<AppleSystemStatusDbContext>((provider, context) =>
             {
                 var configuration = provider.GetRequiredService<IConfiguration>();
-                var databaseConnectionString = configuration.GetValue<string?>("DatabaseConnectionString");
-                if (databaseConnectionString is null)
-                {
-                    var vaultUri = configuration.GetValue<Uri>("VaultUri");
-                    var secretName = configuration.GetValue<string>("VaultSecret");
-                    var credential = new ManagedIdentityCredential();
-                    var secretClient = new SecretClient(vaultUri, credential);
-                    databaseConnectionString = secretClient.GetSecret(secretName)?.Value?.Value;
-                }
+                var databaseConnectionString = configuration.GetConnectionString("AppleSystemStatus");
                 context.UseSqlServer(databaseConnectionString);
             });
 
