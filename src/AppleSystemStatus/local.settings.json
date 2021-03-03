@@ -1,0 +1,12 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "AzureWebJobs.SystemStatusCron.Disabled": true,
+    "AzureWebJobs.CountriesImportCron.Disabled": true
+  },
+  "ConnectionStrings": {
+    "AppleSystemStatus": "Server=localhost;Database=AppleSystemStatus;Integrated Security=True;"
+  }
+}
