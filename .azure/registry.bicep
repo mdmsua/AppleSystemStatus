@@ -1,7 +1,6 @@
 param name string
 param location string
-param siteName string
-param webhookUri string
+param sites array
 
 resource registry 'Microsoft.ContainerRegistry/registries@2020-11-01-preview' = {
   name: name
@@ -40,18 +39,18 @@ resource registry 'Microsoft.ContainerRegistry/registries@2020-11-01-preview' = 
   }
 }
 
-resource webhook 'Microsoft.ContainerRegistry/registries/webhooks@2020-11-01-preview' = {
+resource webhooks 'Microsoft.ContainerRegistry/registries/webhooks@2020-11-01-preview' = [for site in sites: {
   location: location
-  name: siteName
+  name: site.name
   properties: {
     actions: [
       'push'
     ]
-    scope: '${siteName}:latest'
-    serviceUri: webhookUri
+    scope: '${site.image}'
+    serviceUri: site.webhook
     status: 'enabled'
   }
-}
+}]
 
 output username string = listCredentials(registry.id, registry.apiVersion).username
 output password string = listCredentials(registry.id, registry.apiVersion).passwords[0].value

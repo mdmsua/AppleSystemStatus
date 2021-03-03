@@ -38,6 +38,9 @@ resource database 'Microsoft.Sql/servers/databases@2020-08-01-preview' = {
   dependsOn: [
     server
   ]
+  tags: {
+    environment: 'production'
+  }
   sku: {
     name: 'Basic'
     tier: 'Basic'
@@ -51,6 +54,30 @@ resource database 'Microsoft.Sql/servers/databases@2020-08-01-preview' = {
     storageAccountType: 'GRS'
   }
 }
+
+resource canary 'Microsoft.Sql/servers/databases@2020-08-01-preview' = {
+  name: '${name}/AppleSystemStatus'
+  location: location
+  dependsOn: [
+    server
+  ]
+  tags: {
+    environment: 'canary'
+  }
+  sku: {
+    name: 'Basic'
+    tier: 'Basic'
+    capacity: 5
+  }
+  properties: {
+    collation: 'SQL_Latin1_General_CP1_CI_AS'
+    catalogCollation: 'SQL_Latin1_General_CP1_CI_AS'
+    zoneRedundant: false
+    readScale: 'Disabled'
+    storageAccountType: 'GRS'
+  }
+}
+
 
 resource firewall 'Microsoft.Sql/servers/firewallRules@2015-05-01-preview' = {
   name: '${name}/AllowAllWindowsAzureIps'

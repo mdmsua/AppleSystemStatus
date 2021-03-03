@@ -47,8 +47,7 @@ module registry './registry.bicep' = {
   params: {
     name: containerRegistryName
     location: defaultLocation
-    siteName: siteName
-    webhookUri: 'https://${web.outputs.publishingUsername}:${web.outputs.publishingPassword}@${siteName}.scm.azurewebsites.net/docker/hook'
+    sites: web.outputs.sites
   }
 }
 
@@ -78,11 +77,28 @@ module vault './vault.bicep' = {
     name: keyVaultName
     location: defaultLocation
     sid: objectId
-    instrumentationKey: insights.outputs.instrumentationKey
-    registryPassword: registry.outputs.password
-    siteId: web.outputs.objectId
-    siteName: siteName
-    sqlConnectionString: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${sqlServerLogin};Password=${sqlServerPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
-    storageConnectionString: storage.outputs.connectionString
+    sites: web.outputs.sites
+    secrets: [
+      {
+        name: '${siteName}-AppleSystemStatus'
+        value: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${sqlServerLogin};Password=${sqlServerPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+      }
+      {
+        name: '${siteName}-CanarySystemStatus'
+        value: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=CanarySystemStatus;Persist Security Info=False;User ID=${sqlServerLogin};Password=${sqlServerPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+      }
+      {
+        name: '${siteName}-AzureWebJobsStorage'
+        value: storage.outputs.connectionString
+      }
+      {
+        name: '${siteName}-ApplicationInsightsInstrumentationKey'
+        value: insights.outputs.instrumentationKey
+      }
+      {
+        name: '${siteName}-DockerRegistryServerPassword'
+        value: registry.outputs.password
+      }
+    ]
   }
 }

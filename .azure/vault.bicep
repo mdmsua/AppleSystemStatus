@@ -1,20 +1,8 @@
 param name string
 param location string
-param siteId string
 param sid string
-param siteName string
-param sqlConnectionString string {
-  secure: true
-}
-param storageConnectionString string {
-  secure: true
-}
-param instrumentationKey string {
-  secure: true
-}
-param registryPassword string {
-  secure: true
-}
+param secrets array
+param sites array
 
 resource vault 'Microsoft.KeyVault/vaults@2020-04-01-preview' = {
   name: name
@@ -26,15 +14,6 @@ resource vault 'Microsoft.KeyVault/vaults@2020-04-01-preview' = {
     }
     tenantId: subscription().tenantId
     accessPolicies: [
-      {
-        tenantId: subscription().tenantId
-        objectId: siteId
-        permissions: {
-          secrets: [
-            'get'
-          ]
-        }
-      }
       {
         tenantId: subscription().tenantId
         objectId: sid
@@ -103,30 +82,26 @@ resource vault 'Microsoft.KeyVault/vaults@2020-04-01-preview' = {
   }
 }
 
-resource sqlSecret 'Microsoft.KeyVault/vaults/secrets@2020-04-01-preview' = {
-  name: '${name}/${siteName}-AppleSystemStatus'
-  properties: {
-    value: sqlConnectionString
-  }
-}
+resource accessPolicies 'Microsoft.KeyVault/vaults/accessPolicies@2020-04-01-preview' = [for site in sites: {
+   name: 'add'
+   properties: {
+     accessPolicies: [
+       {
+         tenantId: subscription().tenantId
+         objectId: site.oid
+         permissions: {
+           secrets: [
+             'get'
+           ]
+         }
+       }
+     ]
+   }
+}]
 
-resource storageSecret 'Microsoft.KeyVault/vaults/secrets@2020-04-01-preview' = {
-  name: '${name}/${siteName}-AzureWebJobsStorage'
+resource secret 'Microsoft.KeyVault/vaults/secrets@2020-04-01-preview' = [for secret in secrets: {
+  name: '${name}/${secret.name}'
   properties: {
-    value: storageConnectionString
+    value: secret.value
   }
-}
-
-resource instrumentationSecret 'Microsoft.KeyVault/vaults/secrets@2020-04-01-preview' = {
-  name: '${name}/${siteName}-ApplicationInsightsInstrumentationKey'
-  properties: {
-    value: instrumentationKey
-  }
-}
-
-resource registrySecret 'Microsoft.KeyVault/vaults/secrets@2020-04-01-preview' = {
-  name: '${name}/${siteName}-DockerRegistryServerPassword'
-  properties: {
-    value: registryPassword
-  }
-}
+}]

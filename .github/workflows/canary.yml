@@ -1,9 +1,9 @@
-name: main
+name: canary
 
 on:
   push:
     branches:
-      - main
+      - canary
 
 env:
   CONTAINER_REGISTRY: mdmsua.azurecr.io
@@ -46,7 +46,7 @@ jobs:
           dotnet test --no-build --configuration Release
           dotnet ef database update --no-build --configuration Release --project src/AppleSystemStatus
         env:
-          DatabaseConnectionString: "Server=tcp:mdmsua.database.windows.net,1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${{ secrets.SA_USERNAME }};Password=${{ secrets.SA_PASSWORD }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+          DatabaseConnectionString: "Server=tcp:mdmsua.database.windows.net,1433;Initial Catalog=CanarySystemStatus;Persist Security Info=False;User ID=${{ secrets.SA_USERNAME }};Password=${{ secrets.SA_PASSWORD }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
           ApplicationUsername: ${{ secrets.DB_USERNAME }}
           ApplicationPassword: ${{ secrets.DB_PASSWORD }}
 
@@ -72,8 +72,6 @@ jobs:
         with:
           push: true
           tags: |
-            ${{ env.IMAGE_REPOSITORY }}:latest
-            ${{ env.IMAGE_REPOSITORY }}:${{ github.sha }}
-            ${{ env.IMAGE_REPOSITORY }}:${{ steps.gitversion.outputs.semVer }}
+            ${{ env.IMAGE_REPOSITORY }}:canary
           args: |
             VERSION=${{ steps.gitversion.outputs.assemblySemVer }}
