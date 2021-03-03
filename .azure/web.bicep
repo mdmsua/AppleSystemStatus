@@ -175,8 +175,8 @@ resource canary 'Microsoft.Web/sites/slots@2020-06-01' = {
 
 var sitePublishingUsername = list(resourceId('Microsoft.Web/sites/config', siteName, 'publishingcredentials'), site.apiVersion).properties.publishingUserName
 var sitePublishingPassword = list(resourceId('Microsoft.Web/sites/config', siteName, 'publishingcredentials'), site.apiVersion).properties.publishingUserName
-var slotPublishingUsername = list(resourceId('Microsoft.Web/sites/config', slotName, 'publishingcredentials'), site.apiVersion).properties.publishingUserName
-var slotPublishingPassword = list(resourceId('Microsoft.Web/sites/config', slotName, 'publishingcredentials'), site.apiVersion).properties.publishingPassword
+var slotPublishingUsername = list(resourceId('Microsoft.Web/sites/slots/config', siteName, slot, 'publishingcredentials'), site.apiVersion).properties.publishingUserName
+var slotPublishingPassword = list(resourceId('Microsoft.Web/sites/slots/config', siteName, slot, 'publishingcredentials'), site.apiVersion).properties.publishingPassword
 
 output sites array = [
   {
