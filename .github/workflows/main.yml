@@ -68,12 +68,6 @@ jobs:
           registry: ${{ env.CONTAINER_REGISTRY }}
           username: mdmsua
           password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
-      - uses: docker/build-push-action@v2
-        with:
-          push: true
-          tags: |
-            ${{ env.IMAGE_REPOSITORY }}:latest
-            ${{ env.IMAGE_REPOSITORY }}:${{ github.sha }}
-            ${{ env.IMAGE_REPOSITORY }}:${{ steps.gitversion.outputs.semVer }}
-          args: |
-            VERSION=${{ steps.gitversion.outputs.assemblySemVer }}
+      - run: |
+          docker tag ${{ env.IMAGE_REPOSITORY }}:canary ${{ env.IMAGE_REPOSITORY }}:latest
+          docker push ${{ env.IMAGE_REPOSITORY }}:latest
