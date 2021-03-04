@@ -1,6 +1,2 @@
 mode: MainLine
-major-version-bump-message: '^Breaking'
-minor-version-bump-message: '^Implement'
-patch-version-bump-message: '^Fix'
-no-bump-message: '^None'
 commit-message-incrementing: MergeMessageOnly
