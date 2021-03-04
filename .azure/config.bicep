@@ -15,6 +15,7 @@ resource siteSettings 'Microsoft.Web/sites/config@2020-09-01' = {
       DOCKER_REGISTRY_SERVER_PASSWORD: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-DockerRegistryServerPassword)'
       APPINSIGHTS_INSTRUMENTATIONKEY: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-ApplicationInsightsInstrumentationKey)'
       WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
+      HUB_NAME: 'aaplss'
   }
 }
 
@@ -46,6 +47,7 @@ resource slotSettings 'Microsoft.Web/sites/slots/config@2020-09-01' = {
       DOCKER_REGISTRY_SERVER_PASSWORD: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-DockerRegistryServerPassword)'
       APPINSIGHTS_INSTRUMENTATIONKEY: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-ApplicationInsightsInstrumentationKey)'
       WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
+      HUB_NAME: 'canary'
   }
 }
 
