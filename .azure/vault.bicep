@@ -4,7 +4,7 @@ param sid string
 param secrets array
 param sites array
 
-resource vault 'Microsoft.KeyVault/vaults@2020-04-01-preview' = {
+resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
   name: name
   location: location
   properties: {
@@ -82,24 +82,22 @@ resource vault 'Microsoft.KeyVault/vaults@2020-04-01-preview' = {
   }
 }
 
-resource accessPolicies 'Microsoft.KeyVault/vaults/accessPolicies@2020-04-01-preview' = [for site in sites: {
-   name: 'add'
-   properties: {
-     accessPolicies: [
-       {
-         tenantId: subscription().tenantId
-         objectId: site.oid
-         permissions: {
-           secrets: [
-             'get'
-           ]
-         }
-       }
-     ]
-   }
-}]
+resource accessPolicies 'Microsoft.KeyVault/vaults/accessPolicies@2019-09-01' = {
+  name: any('${vault.name}/add')
+  properties: {
+    accessPolicies: [for site in sites: {
+      tenantId: subscription().tenantId
+      objectId: site.oid
+      permissions: {
+        secrets: [
+          'get'
+        ]
+      }
+    }]
+  }
+}
 
-resource secret 'Microsoft.KeyVault/vaults/secrets@2020-04-01-preview' = [for secret in secrets: {
+resource secret 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = [for secret in secrets: {
   name: '${name}/${secret.name}'
   properties: {
     value: secret.value
