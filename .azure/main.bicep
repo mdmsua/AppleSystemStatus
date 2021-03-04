@@ -19,10 +19,10 @@ param workspaceId string {
   default: ''
 }
 
-var defaultLocation = 'germanywestcentral'
+var defaultLocation = resourceGroup().location
 var serviceLocation = 'westeurope'
 
-module storage './storage.bicep' = {
+module storage 'storage.bicep' = {
   name: '${deployment().name}-storage'
   params: {
     location: serviceLocation
@@ -30,7 +30,7 @@ module storage './storage.bicep' = {
   }
 }
 
-module sql './sql.bicep' = {
+module sql 'sql.bicep' = {
   name: '${deployment().name}-sql'
   params: {
     name: sqlServerName
@@ -42,8 +42,11 @@ module sql './sql.bicep' = {
   }
 }
 
-module registry './registry.bicep' = {
+module registry 'registry.bicep' = {
   name: '${deployment().name}-registry'
+  dependsOn: [
+    web
+  ]
   params: {
     name: containerRegistryName
     location: defaultLocation
@@ -51,7 +54,7 @@ module registry './registry.bicep' = {
   }
 }
 
-module insights './insights.bicep' = {
+module insights 'insights.bicep' = {
   name: '${deployment().name}-insights'
   params: {
     name: insightsName
@@ -60,19 +63,23 @@ module insights './insights.bicep' = {
   }
 }
 
-module web './web.bicep' = {
+module web 'web.bicep' = {
   name: '${deployment().name}-web'
   params: {
     farmName: serverFarmName
     siteName: siteName
     location: serviceLocation
-    vaultName: keyVaultName
-    registryName: containerRegistryName
   }
 }
 
-module vault './vault.bicep' = {
+module vault 'vault.bicep' = {
   name: '${deployment().name}-vault'
+  dependsOn: [
+    web
+    storage
+    insights
+    registry
+  ]
   params: {
     name: keyVaultName
     location: defaultLocation
@@ -100,5 +107,18 @@ module vault './vault.bicep' = {
         value: registry.outputs.password
       }
     ]
+  }
+}
+
+module config 'config.bicep' = {
+  name: '${deployment().name}-config'
+  dependsOn: [
+    registry
+    vault
+  ]
+  params: {
+    siteName: siteName
+    vaultName: keyVaultName
+    registryName: containerRegistryName
   }
 }
