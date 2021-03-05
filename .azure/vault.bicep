@@ -13,7 +13,7 @@ resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
       name: 'standard'
     }
     tenantId: subscription().tenantId
-    // accessPolicies: [
+    accessPolicies: [
     //   {
     //     tenantId: subscription().tenantId
     //     objectId: sid
@@ -66,7 +66,7 @@ resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
     //       ]
     //     }
     //   }
-    // ]
+    ]
     enabledForDeployment: false
     enabledForDiskEncryption: false
     enabledForTemplateDeployment: false
