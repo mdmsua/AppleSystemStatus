@@ -1,69 +1,40 @@
 param siteName string
 param vaultName string
-param registryName string
+param imageName string
+param acrHost string
+param acrUsernameKey string
+param acrPasswordKey string
+param aiInstrumentationKey string
+param storageConnectionStringKey string
+param sqlConnectionStringKey string
 
-var slot = 'canary'
-
-resource siteSettings 'Microsoft.Web/sites/config@2020-09-01' = {
+resource appSettings 'Microsoft.Web/sites/config@2020-09-01' = {
   name: '${siteName}/appsettings'
   properties: {
-      AzureWebJobsStorage: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-AzureWebJobsStorage)'
+      AzureWebJobsStorage: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${storageConnectionStringKey})'
       FUNCTIONS_EXTENSION_VERSION: '~3'
       DOCKER_ENABLE_CI: 'true'
-      DOCKER_REGISTRY_SERVER_URL: 'https://${registryName}${environment().suffixes.acrLoginServer}'
-      DOCKER_REGISTRY_SERVER_USERNAME: registryName
-      DOCKER_REGISTRY_SERVER_PASSWORD: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-DockerRegistryServerPassword)'
-      APPINSIGHTS_INSTRUMENTATIONKEY: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-ApplicationInsightsInstrumentationKey)'
+      DOCKER_REGISTRY_SERVER_URL: 'https://${acrHost}'
+      DOCKER_REGISTRY_SERVER_USERNAME: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${acrUsernameKey})'
+      DOCKER_REGISTRY_SERVER_PASSWORD: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${acrPasswordKey})'
+      APPINSIGHTS_INSTRUMENTATIONKEY: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${aiInstrumentationKey})'
       WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
-      HUB_NAME: 'aaplss'
   }
 }
 
-resource siteConfig 'Microsoft.Web/sites/config@2020-09-01' = {
+resource web 'Microsoft.Web/sites/config@2020-09-01' = {
   name: '${siteName}/web'
   properties: {
-    linuxFxVersion: 'DOCKER|${registryName}${environment().suffixes.acrLoginServer}/${siteName}:latest'
+    linuxFxVersion: 'DOCKER|${acrHost}/${imageName}'
   }
 }
 
-resource siteConnectionStrings 'Microsoft.Web/sites/config@2020-09-01' = {
+resource connectionStrings 'Microsoft.Web/sites/config@2020-09-01' = {
   name: '${siteName}/connectionstrings'
   properties: {
     AppleSystemStatus: {
       type: 'SQLAzure'
-      value: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-AppleSystemStatus)'
-    }
-  }
-}
-
-resource slotSettings 'Microsoft.Web/sites/slots/config@2020-09-01' = {
-  name: '${siteName}/${slot}/appsettings'
-  properties: {
-      AzureWebJobsStorage: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-AzureWebJobsStorage)'
-      FUNCTIONS_EXTENSION_VERSION: '~3'
-      DOCKER_ENABLE_CI: 'true'
-      DOCKER_REGISTRY_SERVER_URL: 'https://${registryName}${environment().suffixes.acrLoginServer}'
-      DOCKER_REGISTRY_SERVER_USERNAME: registryName
-      DOCKER_REGISTRY_SERVER_PASSWORD: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-DockerRegistryServerPassword)'
-      APPINSIGHTS_INSTRUMENTATIONKEY: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-ApplicationInsightsInstrumentationKey)'
-      WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
-      HUB_NAME: 'canary'
-  }
-}
-
-resource slotConfig 'Microsoft.Web/sites/slots/config@2020-09-01' = {
-  name: '${siteName}/${slot}/web'
-  properties: {
-    linuxFxVersion: 'DOCKER|${registryName}${environment().suffixes.acrLoginServer}/${siteName}:canary'
-  }
-}
-
-resource slotConnectionStrings 'Microsoft.Web/sites/slots/config@2020-09-01' = {
-  name: '${siteName}/${slot}/connectionstrings'
-  properties: {
-    AppleSystemStatus: {
-      type: 'SQLAzure'
-      value: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-CanarySystemStatus)'
+      value: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${sqlConnectionStringKey})'
     }
   }
 }

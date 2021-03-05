@@ -2,7 +2,7 @@ param name string
 param location string
 param sid string
 param secrets array
-param sites array
+param policies array
 
 resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
   name: name
@@ -85,13 +85,11 @@ resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
 resource accessPolicies 'Microsoft.KeyVault/vaults/accessPolicies@2019-09-01' = {
   name: any('${vault.name}/add')
   properties: {
-    accessPolicies: [for site in sites: {
+    accessPolicies: [for policy in policies: {
       tenantId: subscription().tenantId
-      objectId: site.oid
+      objectId: policy.oid
       permissions: {
-        secrets: [
-          'get'
-        ]
+        secrets: policy.permissions
       }
     }]
   }

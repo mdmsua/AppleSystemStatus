@@ -11,9 +11,6 @@
     "extensions": {
         "http": {
             "routePrefix": ""
-        },
-        "durableTask": {
-            "hubName": "%HUB_NAME%"
         }
     }
 }

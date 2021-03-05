@@ -4,17 +4,100 @@ on:
   push:
     branches-ignore:
       - main
-      - canary
 
 jobs:
-  build:
+  az:
     runs-on: ubuntu-20.04
+    environment: sanbox
+    outputs:
+      vault: ${{ steps.az.outputs.vault }}
+      registry: ${{ steps.az.outputs.registry }}
+      repository: ${{ steps.az.outputs.repository }}
+      username: ${{ steps.az.outputs.username }}
+      password: ${{ steps.az.outputs.password }}
+      sql: ${{ steps.az.outputs.sql }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+          curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x ./bicep
+          ./bicep build main.bicep
+          rm ./bicep
+        working-directory: .azure
+      - uses: azure/cli@v1
+        id: az
+        with:
+          inlineScript: |
+            cd .azure
+            az deployment sub validate -l westeurope -f sandbox.json -n $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S") --no-prompt -p oid=${{ secrets.CLIENT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }}
+            outputs=$(az deployment sub create -l westeurope -f sandbox.json -n $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S") --no-prompt -p oid=${{ secrets.CLIENT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }} | jq '.properties.outputs')
+            vault=$(echo $outputs | jq -r '.kvName.value')
+            registry=$(echo $outputs | jq -r '.acrHost.value')
+            repository=$(echo $outputs | jq -r '.acrRepo.value')
+            username=$(echo $outputs | jq -r '.acrUser.value')
+            password=$(echo $outputs | jq -r '.acrPass.value')
+            sql=$(echo $outputs | jq -r '.sqlHost.value')
+            echo "::set-output name=vault::$vault name=registry::$registry name=repository::$repository name=username::$username name=password::$password name=sql::$sql"
+
+  db:
+    runs-on: ubuntu-20.04
+    environment: sanbox
+    needs: az
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 3.1.x
       - run: |
+          dotnet tool restore
           dotnet restore
           dotnet build --no-restore --configuration Release
           dotnet test --no-build --configuration Release
+          dotnet ef database update --no-build --configuration Release --project src/AppleSystemStatus
+        env:
+          DatabaseConnectionString: "Server=tcp:${{ needs.az.outputs.sql }},1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${{ secrets.SA_USERNAME }};Password=${{ secrets.SA_PASSWORD }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+          ApplicationUsername: ${{ secrets.DB_USERNAME }}
+          ApplicationPassword: ${{ secrets.DB_PASSWORD }}
+
+  acr:
+    runs-on: ubuntu-20.04
+    environment: sanbox
+    needs:
+      - az
+      - db
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: gittools/actions/gitversion/setup@v0.9.9
+        with:
+          versionSpec: '5.x'
+      - uses: gittools/actions/gitversion/execute@v0.9.9
+        id: gitversion
+        with:
+          useConfigFile: true
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: azure/get-keyvault-secrets@v1
+        with:
+          keyvault: ${{ needs.az.outputs.vault }}
+          secrets: '${{ needs.az.outputs.username }},${{ needs.az.outputs.password }}'
+        id: kv
+      - uses: docker/setup-buildx-action@v1
+      - uses: docker/login-action@v1
+        with:
+          registry: ${{ needs.az.outputs.registry }}
+          username: ${{ steps.kv.outputs.${{ needs.az.outputs.username }} }}
+          password: ${{ steps.kv.outputs.${{ needs.az.outputs.password }} }}
+      - uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: |
+            ${{ needs.az.outputs.repository }}:latest
+            ${{ needs.az.outputs.repository }}:${{ steps.gitversion.outputs.majorMinorPatch }}
+          build-args: |
+            VERSION=${{ steps.gitversion.outputs.assemblySemVer }}

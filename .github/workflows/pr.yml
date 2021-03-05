@@ -1,0 +1,19 @@
+name: pr
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-20.04
+    environment: sandbox
+    steps:
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: azure/cli@v1
+        with:
+          inlineScript: az group delete -n $(az group list --tag branch[=${{ github.head_ref }}] | jq -r '.[].name') -y
+      

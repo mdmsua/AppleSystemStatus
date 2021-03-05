@@ -9,23 +9,32 @@ param sqlServerLogin string
 param sqlServerPassword string {
   secure: true
 }
-param objectId string
+param oid string = ''
+param sid string = ''
+param adLogin string = ''
 param containerRegistryName string = globalPrefix
 param insightsName string = globalPrefix
 param serverFarmName string = globalPrefix
-param siteName string
+param siteName string = globalPrefix
 param keyVaultName string = globalPrefix
-param workspaceId string {
-  default: ''
-}
+param workspaceId string  = ''
 
-var defaultLocation = resourceGroup().location
-var serviceLocation = 'westeurope'
+param primaryLocation string = resourceGroup().location
+param secondaryLocation string = 'westeurope'
+
+var acr = '${containerRegistryName}${environment().suffixes.acrLoginServer}'
+var acrUsernameKey = '${siteName}-DockerRegistryUsername'
+var acrPasswordKey = '${siteName}-DockerRegistryPassword'
+var sqlConnectionStringKey = '${siteName}-DatabaseConnectionString'
+var aiInstrumentationKey = '${siteName}-AppInsightsInstrumentationKey'
+var storageConnectionStringKey = '${siteName}-StorageConnectionString'
+
+var sqlHost = '${sqlServerName}${environment().suffixes.sqlServerHostname}'
 
 module storage 'storage.bicep' = {
   name: '${deployment().name}-storage'
   params: {
-    location: serviceLocation
+    location: secondaryLocation
     name: storageAccountName
   }
 }
@@ -34,11 +43,11 @@ module sql 'sql.bicep' = {
   name: '${deployment().name}-sql'
   params: {
     name: sqlServerName
-    location: defaultLocation
-    adLogin: 'dmytro@mdmsft.net'
+    location: primaryLocation
+    adLogin: adLogin
     adminLogin: sqlServerSaLogin
     adminPassword: sqlServerSaPassword
-    sid: objectId
+    sid: sid
   }
 }
 
@@ -49,8 +58,8 @@ module registry 'registry.bicep' = {
   ]
   params: {
     name: containerRegistryName
-    location: defaultLocation
-    sites: web.outputs.sites
+    location: primaryLocation
+    site: web.outputs.site
   }
 }
 
@@ -58,7 +67,7 @@ module insights 'insights.bicep' = {
   name: '${deployment().name}-insights'
   params: {
     name: insightsName
-    location: serviceLocation
+    location: secondaryLocation
     workspaceId: workspaceId
   }
 }
@@ -68,7 +77,7 @@ module web 'web.bicep' = {
   params: {
     farmName: serverFarmName
     siteName: siteName
-    location: serviceLocation
+    location: secondaryLocation
   }
 }
 
@@ -82,28 +91,42 @@ module vault 'vault.bicep' = {
   ]
   params: {
     name: keyVaultName
-    location: defaultLocation
-    sid: objectId
-    sites: web.outputs.sites
+    location: primaryLocation
+    sid: sid
+    policies: [
+      {
+        oid: web.outputs.site.oid
+        permissions: [
+          'get'
+        ]
+      }
+      {
+        oid: oid
+        permissions: [
+          'get'
+          'list'
+        ]
+      }
+    ]
     secrets: [
       {
-        name: '${siteName}-AppleSystemStatus'
-        value: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${sqlServerLogin};Password=${sqlServerPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+        name: sqlConnectionStringKey
+        value: 'Server=tcp:${sqlHost},1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${sqlServerLogin};Password=${sqlServerPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
       }
       {
-        name: '${siteName}-CanarySystemStatus'
-        value: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=CanarySystemStatus;Persist Security Info=False;User ID=${sqlServerLogin};Password=${sqlServerPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
-      }
-      {
-        name: '${siteName}-AzureWebJobsStorage'
+        name: storageConnectionStringKey
         value: storage.outputs.connectionString
       }
       {
-        name: '${siteName}-ApplicationInsightsInstrumentationKey'
+        name: aiInstrumentationKey
         value: insights.outputs.instrumentationKey
       }
       {
-        name: '${siteName}-DockerRegistryServerPassword'
+        name: acrUsernameKey
+        value: registry.outputs.username
+      }
+      {
+        name: acrPasswordKey
         value: registry.outputs.password
       }
     ]
@@ -119,6 +142,19 @@ module config 'config.bicep' = {
   params: {
     siteName: siteName
     vaultName: keyVaultName
-    registryName: containerRegistryName
+    imageName: web.outputs.site.image
+    acrHost: acr
+    acrUsernameKey: acrUsernameKey
+    acrPasswordKey: acrPasswordKey
+    aiInstrumentationKey: aiInstrumentationKey
+    sqlConnectionStringKey: sqlConnectionStringKey
+    storageConnectionStringKey: storageConnectionStringKey
   }
 }
+
+output acrHost string = acr
+output acrRepo string = '${acr}/${siteName}'
+output acrUser string = acrUsernameKey
+output acrPass string = acrPasswordKey
+output kvName string = keyVaultName
+output sqlHost string = sqlHost
