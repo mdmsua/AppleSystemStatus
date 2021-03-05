@@ -34,13 +34,12 @@ jobs:
             cd .azure
             az deployment sub validate -l westeurope -f sandbox.json -n $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S") --no-prompt -p name=${GITHUB_REF:11} oid=${{ secrets.CLIENT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }}
             outputs=$(az deployment sub create -l westeurope -f sandbox.json -n $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S") --no-prompt -p name=${GITHUB_REF:11} oid=${{ secrets.CLIENT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }} | jq '.properties.outputs')
-            vault=$(echo $outputs | jq -r '.kvName.value')
-            registry=$(echo $outputs | jq -r '.acrHost.value')
-            repository=$(echo $outputs | jq -r '.acrRepo.value')
-            username=$(echo $outputs | jq -r '.acrUser.value')
-            password=$(echo $outputs | jq -r '.acrPass.value')
-            sql=$(echo $outputs | jq -r '.sqlHost.value')
-            echo "::set-output name=vault::$vault,name=registry::$registry,name=repository::$repository,name=username::$username,name=password::$password,name=sql::$sql"
+            echo "::set-output name=vault::$(echo $outputs | jq -r '.kvName.value')"
+            echo "::set-output name=registry::$(echo $outputs | jq -r '.acrHost.value')"
+            echo "::set-output name=repository::$(echo $outputs | jq -r '.acrRepo.value')"
+            echo "::set-output name=username::$(echo $outputs | jq -r '.acrUser.value')"
+            echo "::set-output name=password::$(echo $outputs | jq -r '.acrPass.value')"
+            echo "::set-output name=sql::$(echo $outputs | jq -r '.sqlHost.value')""
 
   db:
     runs-on: ubuntu-20.04
