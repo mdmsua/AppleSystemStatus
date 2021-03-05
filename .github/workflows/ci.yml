@@ -32,8 +32,8 @@ jobs:
         with:
           inlineScript: |
             cd .azure
-            az deployment sub validate -l westeurope -f sandbox.json -n $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S") --no-prompt -p oid=${{ secrets.CLIENT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }}
-            outputs=$(az deployment sub create -l westeurope -f sandbox.json -n $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S") --no-prompt -p oid=${{ secrets.CLIENT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }} | jq '.properties.outputs')
+            az deployment sub validate -l westeurope -f sandbox.json -n $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S") --no-prompt -p name=${GITHUB_REF:11} oid=${{ secrets.CLIENT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }}
+            outputs=$(az deployment sub create -l westeurope -f sandbox.json -n $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S") --no-prompt -p name=${GITHUB_REF:11} oid=${{ secrets.CLIENT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }} | jq '.properties.outputs')
             vault=$(echo $outputs | jq -r '.kvName.value')
             registry=$(echo $outputs | jq -r '.acrHost.value')
             repository=$(echo $outputs | jq -r '.acrRepo.value')
