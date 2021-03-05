@@ -40,7 +40,7 @@ jobs:
             username=$(echo $outputs | jq -r '.acrUser.value')
             password=$(echo $outputs | jq -r '.acrPass.value')
             sql=$(echo $outputs | jq -r '.sqlHost.value')
-            echo "::set-output name=vault::$vault name=registry::$registry name=repository::$repository name=username::$username name=password::$password name=sql::$sql"
+            echo "::set-output name=vault::$vault,name=registry::$registry,name=repository::$repository,name=username::$username,name=password::$password,name=sql::$sql"
 
   db:
     runs-on: ubuntu-20.04
