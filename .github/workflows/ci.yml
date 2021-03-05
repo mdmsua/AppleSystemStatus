@@ -24,7 +24,7 @@ jobs:
       - run: |
           curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
           chmod +x ./bicep
-          ./bicep build main.bicep
+          ./bicep build sandbox.bicep
           rm ./bicep
         working-directory: .azure
       - uses: azure/cli@v1
