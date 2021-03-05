@@ -8,7 +8,7 @@ on:
 jobs:
   az:
     runs-on: ubuntu-20.04
-    environment: sanbox
+    environment: sandbox
     outputs:
       vault: ${{ steps.az.outputs.vault }}
       registry: ${{ steps.az.outputs.registry }}
@@ -44,7 +44,7 @@ jobs:
 
   db:
     runs-on: ubuntu-20.04
-    environment: sanbox
+    environment: sandbox
     needs: az
     steps:
       - uses: actions/checkout@v2
@@ -64,7 +64,7 @@ jobs:
 
   acr:
     runs-on: ubuntu-20.04
-    environment: sanbox
+    environment: sandbox
     needs:
       - az
       - db
