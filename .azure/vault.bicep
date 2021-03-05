@@ -83,9 +83,6 @@ resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
 
 resource accessPolicies 'Microsoft.KeyVault/vaults/accessPolicies@2019-09-01' = {
   name: any('${vault.name}/add')
-  dependsOn: [
-    vault
-  ]
   properties: {
     accessPolicies: [for policy in policies: {
       tenantId: subscription().tenantId
@@ -98,10 +95,7 @@ resource accessPolicies 'Microsoft.KeyVault/vaults/accessPolicies@2019-09-01' = 
 }
 
 resource secret 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = [for secret in secrets: {
-  name: '${name}/${secret.name}'
-  dependsOn: [
-    vault
-  ]
+  name: '${vault.name}/${secret.name}'
   properties: {
     value: secret.value
   }
