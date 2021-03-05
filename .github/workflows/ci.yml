@@ -39,7 +39,7 @@ jobs:
             echo "::set-output name=repository::$(echo $outputs | jq -r '.acrRepo.value')"
             echo "::set-output name=username::$(echo $outputs | jq -r '.acrUser.value')"
             echo "::set-output name=password::$(echo $outputs | jq -r '.acrPass.value')"
-            echo "::set-output name=sql::$(echo $outputs | jq -r '.sqlHost.value')""
+            echo "::set-output name=sql::$(echo $outputs | jq -r '.sqlHost.value')"
 
   db:
     runs-on: ubuntu-20.04
