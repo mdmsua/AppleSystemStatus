@@ -70,8 +70,7 @@ resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
     enabledForDeployment: false
     enabledForDiskEncryption: false
     enabledForTemplateDeployment: false
-    enablePurgeProtection: true
-    enableSoftDelete: true
+    enableSoftDelete: false
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Allow'
@@ -84,6 +83,9 @@ resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
 
 resource accessPolicies 'Microsoft.KeyVault/vaults/accessPolicies@2019-09-01' = {
   name: any('${vault.name}/add')
+  dependsOn: [
+    vault
+  ]
   properties: {
     accessPolicies: [for policy in policies: {
       tenantId: subscription().tenantId
