@@ -13,60 +13,60 @@ resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
       name: 'standard'
     }
     tenantId: subscription().tenantId
-    accessPolicies: [
-      {
-        tenantId: subscription().tenantId
-        objectId: sid
-        permissions: {
-          certificates: [
-            'backup'
-            'create'
-            'delete'
-            'deleteissuers'
-            'get'
-            'getissuers'
-            'import'
-            'list'
-            'listissuers'
-            'managecontacts'
-            'manageissuers'
-            'purge'
-            'recover'
-            'restore'
-            'setissuers'
-            'update'
-          ]
-          keys: [
-            'backup'
-            'create'
-            'decrypt'
-            'delete'
-            'encrypt'
-            'get'
-            'import'
-            'list'
-            'purge'
-            'recover'
-            'restore'
-            'sign'
-            'unwrapKey'
-            'update'
-            'verify'
-            'wrapKey'
-          ]
-          secrets: [
-            'backup'
-            'delete'
-            'get'
-            'list'
-            'purge'
-            'recover'
-            'restore'
-            'set'
-          ]
-        }
-      }
-    ]
+    // accessPolicies: [
+    //   {
+    //     tenantId: subscription().tenantId
+    //     objectId: sid
+    //     permissions: {
+    //       certificates: [
+    //         'backup'
+    //         'create'
+    //         'delete'
+    //         'deleteissuers'
+    //         'get'
+    //         'getissuers'
+    //         'import'
+    //         'list'
+    //         'listissuers'
+    //         'managecontacts'
+    //         'manageissuers'
+    //         'purge'
+    //         'recover'
+    //         'restore'
+    //         'setissuers'
+    //         'update'
+    //       ]
+    //       keys: [
+    //         'backup'
+    //         'create'
+    //         'decrypt'
+    //         'delete'
+    //         'encrypt'
+    //         'get'
+    //         'import'
+    //         'list'
+    //         'purge'
+    //         'recover'
+    //         'restore'
+    //         'sign'
+    //         'unwrapKey'
+    //         'update'
+    //         'verify'
+    //         'wrapKey'
+    //       ]
+    //       secrets: [
+    //         'backup'
+    //         'delete'
+    //         'get'
+    //         'list'
+    //         'purge'
+    //         'recover'
+    //         'restore'
+    //         'set'
+    //       ]
+    //     }
+    //   }
+    // ]
     enabledForDeployment: false
     enabledForDiskEncryption: false
     enabledForTemplateDeployment: false
