@@ -12,6 +12,8 @@ param sqlServerPassword string {
 param oid string
 
 var id = uniqueString(subscription().id, name)
+var domain = 'elcontoso.com'
+var hostname = '${id}.${domain}'
 
 resource rg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: id
@@ -31,6 +33,44 @@ module main 'main.bicep' = {
     sqlServerSaPassword: sqlServerSaPassword
     sqlServerLogin: sqlServerLogin
     sqlServerPassword: sqlServerPassword
+  }
+}
+
+module dns 'dns.bicep' = {
+  name: '${deployment().name}-dns'
+  dependsOn: [
+    main
+  ]
+  scope: resourceGroup('elcontoso')
+  params: {
+    name: id
+    zone: domain
+    token: main.outputs.txtToken
+  }
+}
+
+module binding 'binding.bicep' = {
+  name: '${deployment().name}-binding'
+  dependsOn: [
+    dns
+  ]
+  scope: rg
+  params: {
+    siteName: id
+    hostName: hostname
+  }
+}
+
+module tls 'tls.bicep' = {
+  name: '${deployment().name}-tls'
+  dependsOn: [
+    binding
+  ]
+  scope: rg
+  params: {
+    hostName: hostname
+    siteName: main.outputs.webName
+    farmId: main.outputs.webFarm
   }
 }
 

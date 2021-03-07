@@ -15,5 +15,6 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - uses: azure/cli@v1
         with:
-          inlineScript: az group delete -n $(az group list --query "[?tags.branch == '${{ github.head_ref }}']" | jq -r '.[].name') -y
+          inlineScript: |
+            az group delete -n $(az group list --query "[?tags.branch == '${{ github.head_ref }}']" | jq -r '.[].name') -y
       

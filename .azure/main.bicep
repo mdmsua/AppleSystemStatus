@@ -158,3 +158,6 @@ output acrUser string = acrUsernameKey
 output acrPass string = acrPasswordKey
 output kvName string = keyVaultName
 output sqlHost string = sqlHost
+output txtToken string = web.outputs.site.verification
+output webFarm string = web.outputs.site.farm
+output webName string = siteName
