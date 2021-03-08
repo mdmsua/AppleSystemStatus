@@ -52,4 +52,6 @@ output site object = {
   webhook: '${scmUri}/docker/hook'
   oid: site.identity.principalId
   image: '${siteName}:latest'
+  verification: site.properties.customDomainVerificationId
+  farm: farm.id
 }

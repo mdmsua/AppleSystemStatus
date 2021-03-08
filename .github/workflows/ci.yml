@@ -10,17 +10,39 @@ jobs:
     runs-on: ubuntu-20.04
     environment: sandbox
     outputs:
-      vault: ${{ steps.az.outputs.vault }}
-      registry: ${{ steps.az.outputs.registry }}
-      repository: ${{ steps.az.outputs.repository }}
-      username: ${{ steps.az.outputs.username }}
-      password: ${{ steps.az.outputs.password }}
+      kv: ${{ steps.id.outputs.id }}
+      acr: ${{ steps.az.outputs.acr }}
+      repo: ${{ steps.az.outputs.repo }}
       sql: ${{ steps.az.outputs.sql }}
     steps:
       - uses: actions/checkout@v2
       - uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: azure/cli@v1
+        id: id
+        with:
+          inlineScript: |
+            id=$(az deployment sub create -l westeurope -f .azure/id.json --no-prompt -p name=${GITHUB_REF:11} | jq -r '.properties.outputs.id.value')
+            echo "::set-output name=id::$id"
+      - uses: azure/get-keyvault-secrets@v1
+        continue-on-error: true
+        timeout-minutes: 1
+        id: kv
+        with:
+          keyvault: ${{ steps.id.outputs.id }}
+          secrets: "ServerUsername,ServerPassword,DatabaseUsername,DatabasePassword"
+      - id: db
+        env:
+          srvUser: $(openssl rand -hex 4)
+          srvPass: $(openssl rand -base64 8)
+          appUser: $(openssl rand -hex 4)
+          appPass: $(openssl rand -base64 8)
+        run: |
+          echo "::set-output name=srvUser::${{ steps.kv.outputs.ServerUsername || env.srvUser }}"
+          echo "::set-output name=srvPass::${{ steps.kv.outputs.ServerPassword || env.srvPass }}"
+          echo "::set-output name=appUser::${{ steps.kv.outputs.DatabaseUsername || env.appUser }}"
+          echo "::set-output name=appPass::${{ steps.kv.outputs.DatabasePassword || env.appPass }}"
       - run: |
           curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
           chmod +x ./bicep
@@ -29,16 +51,15 @@ jobs:
         working-directory: .azure
       - uses: azure/cli@v1
         id: az
+        env:
+          name: $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S")
         with:
           inlineScript: |
             cd .azure
-            az deployment sub validate -l westeurope -f sandbox.json -n $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S") --no-prompt -p name=${GITHUB_REF:11} oid=${{ secrets.CLIENT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }}
-            outputs=$(az deployment sub create -l westeurope -f sandbox.json -n $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S") --no-prompt -p name=${GITHUB_REF:11} oid=${{ secrets.CLIENT_ID }} sqlServerSaLogin=${{ secrets.SA_USERNAME }} sqlServerSaPassword=${{ secrets.SA_PASSWORD }} sqlServerLogin=${{ secrets.DB_USERNAME }} sqlServerPassword=${{ secrets.DB_PASSWORD }} | jq '.properties.outputs')
-            echo "::set-output name=vault::$(echo $outputs | jq -r '.kvName.value')"
-            echo "::set-output name=registry::$(echo $outputs | jq -r '.acrHost.value')"
-            echo "::set-output name=repository::$(echo $outputs | jq -r '.acrRepo.value')"
-            echo "::set-output name=username::$(echo $outputs | jq -r '.acrUser.value')"
-            echo "::set-output name=password::$(echo $outputs | jq -r '.acrPass.value')"
+            az deployment sub validate -l westeurope -f sandbox.json -n ${{ env.name }} --no-prompt -p name=${{ steps.id.outputs.id }} branch=${GITHUB_REF:11} oid=${{ secrets.CLIENT_ID }} sqlServerSaLogin=${{ steps.db.outputs.srvUser }} sqlServerSaPassword=${{ steps.db.outputs.srvPass }} sqlServerLogin=${{ steps.db.outputs.appUser }} sqlServerPassword=${{ steps.db.outputs.appPass }}
+            outputs=$(az deployment sub create -l westeurope -f sandbox.json -n ${{ env.name }} --no-prompt -p name=${{ steps.id.outputs.id }} branch=${GITHUB_REF:11} oid=${{ secrets.CLIENT_ID }} sqlServerSaLogin=${{ steps.db.outputs.srvUser }} sqlServerSaPassword=${{ steps.db.outputs.srvPass }} sqlServerLogin=${{ steps.db.outputs.appUser }} sqlServerPassword=${{ steps.db.outputs.appPass }} | jq '.properties.outputs')
+            echo "::set-output name=acr::$(echo $outputs | jq -r '.acrHost.value')"
+            echo "::set-output name=repo::$(echo $outputs | jq -r '.acrRepo.value')"
             echo "::set-output name=sql::$(echo $outputs | jq -r '.sqlHost.value')"
 
   db:
@@ -47,9 +68,17 @@ jobs:
     needs: az
     steps:
       - uses: actions/checkout@v2
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 3.1.x
+      - uses: azure/get-keyvault-secrets@v1
+        id: kv
+        with:
+          keyvault: ${{ needs.az.outputs.kv }}
+          secrets: "ServerUsername,ServerPassword,DatabaseUsername,DatabasePassword"
       - run: |
           dotnet tool restore
           dotnet restore
@@ -57,9 +86,9 @@ jobs:
           dotnet test --no-build --configuration Release
           dotnet ef database update --no-build --configuration Release --project src/AppleSystemStatus
         env:
-          DatabaseConnectionString: "Server=tcp:${{ needs.az.outputs.sql }},1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${{ secrets.SA_USERNAME }};Password=${{ secrets.SA_PASSWORD }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
-          ApplicationUsername: ${{ secrets.DB_USERNAME }}
-          ApplicationPassword: ${{ secrets.DB_PASSWORD }}
+          DatabaseConnectionString: "Server=tcp:${{ needs.az.outputs.sql }},1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${{ steps.kv.outputs.ServerUsername }};Password=${{ steps.kv.outputs.ServerPassword }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+          ApplicationUsername: ${{ steps.kv.outputs.DatabaseUsername }}
+          ApplicationPassword: ${{ steps.kv.outputs.DatabasePassword }}
 
   acr:
     runs-on: ubuntu-20.04
@@ -83,20 +112,20 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - uses: azure/get-keyvault-secrets@v1
         with:
-          keyvault: ${{ needs.az.outputs.vault }}
-          secrets: '${{ needs.az.outputs.username }},${{ needs.az.outputs.password }}'
+          keyvault: ${{ needs.az.outputs.kv }}
+          secrets: 'RegistryUsername,RegistryPassword'
         id: kv
       - uses: docker/setup-buildx-action@v1
       - uses: docker/login-action@v1
         with:
-          registry: ${{ needs.az.outputs.registry }}
-          username: ${{ steps.kv.outputs[format('{0}', needs.az.outputs.username)] }}
-          password: ${{ steps.kv.outputs[format('{0}', needs.az.outputs.password)] }}
+          registry: ${{ needs.az.outputs.acr }}
+          username: ${{ steps.kv.outputs.RegistryUsername }}
+          password: ${{ steps.kv.outputs.RegistryPassword }}
       - uses: docker/build-push-action@v2
         with:
           push: true
           tags: |
-            ${{ needs.az.outputs.repository }}:latest
-            ${{ needs.az.outputs.repository }}:${{ steps.gitversion.outputs.majorMinorPatch }}
+            ${{ needs.az.outputs.repo }}:latest
+            ${{ needs.az.outputs.repo }}:${{ steps.gitversion.outputs.majorMinorPatch }}
           build-args: |
             VERSION=${{ steps.gitversion.outputs.assemblySemVer }}

@@ -5,6 +5,7 @@
 .DS_Store
 .azure/*
 !.azure/*.bicep
+!.azure/id.json
 .vscode/
 
 ### ASPNETCore ###
