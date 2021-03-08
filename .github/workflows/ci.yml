@@ -27,6 +27,7 @@ jobs:
             echo "::set-output name=id::$id"
       - uses: azure/get-keyvault-secrets@v1
         continue-on-error: true
+        timeout-minutes: 1
         id: kv
         with:
           keyvault: ${{ steps.id.outputs.id }}
