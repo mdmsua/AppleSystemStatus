@@ -23,11 +23,16 @@ param primaryLocation string = resourceGroup().location
 param secondaryLocation string = 'westeurope'
 
 var acr = '${containerRegistryName}${environment().suffixes.acrLoginServer}'
-var acrUsernameKey = '${siteName}-DockerRegistryUsername'
-var acrPasswordKey = '${siteName}-DockerRegistryPassword'
-var sqlConnectionStringKey = '${siteName}-DatabaseConnectionString'
-var aiInstrumentationKey = '${siteName}-AppInsightsInstrumentationKey'
-var storageConnectionStringKey = '${siteName}-StorageConnectionString'
+
+var acrUsernameKey = 'RegistryUsername'
+var acrPasswordKey = 'RegistryPassword'
+var sqlConnectionStringKey = 'DatabaseConnectionString'
+var aiInstrumentationKey = 'InstrumentationKey'
+var storageConnectionStringKey = 'StorageConnectionString'
+var sqlServerUsernameKey = 'ServerUsername'
+var sqlServerPasswordKey = 'ServerPassword'
+var sqlDatabaseUsernameKey = 'DatabaseUsername'
+var sqlDatabasePasswordKey = 'DatabasePassword'
 
 var sqlHost = '${sqlServerName}${environment().suffixes.sqlServerHostname}'
 
@@ -114,6 +119,22 @@ module vault 'vault.bicep' = {
         value: 'Server=tcp:${sqlHost},1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${sqlServerLogin};Password=${sqlServerPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
       }
       {
+        name: sqlServerUsernameKey
+        value: sqlServerSaLogin
+      }
+      {
+        name: sqlServerPasswordKey
+        value: sqlServerSaPassword
+      }
+      {
+        name: sqlDatabaseUsernameKey
+        value: sqlServerLogin
+      }
+      {
+        name: sqlDatabasePasswordKey
+        value: sqlServerPassword
+      }
+      {
         name: storageConnectionStringKey
         value: storage.outputs.connectionString
       }
@@ -154,9 +175,6 @@ module config 'config.bicep' = {
 
 output acrHost string = acr
 output acrRepo string = '${acr}/${siteName}'
-output acrUser string = acrUsernameKey
-output acrPass string = acrPasswordKey
-output kvName string = keyVaultName
 output sqlHost string = sqlHost
 output txtToken string = web.outputs.site.verification
 output webFarm string = web.outputs.site.farm
