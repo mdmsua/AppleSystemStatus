@@ -1,6 +1,7 @@
 targetScope = 'subscription'
 
 param name string
+param branch string
 param sqlServerSaLogin string
 param sqlServerSaPassword string {
   secure: true
@@ -11,15 +12,14 @@ param sqlServerPassword string {
 }
 param oid string
 
-var id = uniqueString(subscription().id, name)
 var domain = 'elcontoso.com'
-var hostname = '${id}.${domain}'
+var hostname = '${name}.${domain}'
 
 resource rg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
-  name: id
+  name: name
   location: deployment().location
   tags: {
-    branch: name
+    branch: branch
   }
 }
 
@@ -28,7 +28,7 @@ module main 'main.bicep' = {
   name: '${deployment().name}-main'
   params: {
     oid: oid
-    globalPrefix: id
+    globalPrefix: name
     sqlServerSaLogin: sqlServerSaLogin
     sqlServerSaPassword: sqlServerSaPassword
     sqlServerLogin: sqlServerLogin
@@ -43,7 +43,7 @@ module dns 'dns.bicep' = {
   ]
   scope: resourceGroup('elcontoso')
   params: {
-    name: id
+    name: name
     zone: domain
     token: main.outputs.txtToken
   }
@@ -56,7 +56,7 @@ module binding 'binding.bicep' = {
   ]
   scope: rg
   params: {
-    siteName: id
+    siteName: name
     hostName: hostname
   }
 }
@@ -76,7 +76,4 @@ module tls 'tls.bicep' = {
 
 output acrHost string = main.outputs.acrHost
 output acrRepo string = main.outputs.acrRepo
-output acrUser string = main.outputs.acrUser
-output acrPass string = main.outputs.acrPass
-output kvName string = main.outputs.kvName
 output sqlHost string = main.outputs.sqlHost
