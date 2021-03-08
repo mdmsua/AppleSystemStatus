@@ -125,7 +125,7 @@ jobs:
         with:
           push: true
           tags: |
-            ${{ needs.az.outputs.acr }}:latest
-            ${{ needs.az.outputs.acr }}:${{ steps.gitversion.outputs.majorMinorPatch }}
+            ${{ needs.az.outputs.repo }}:latest
+            ${{ needs.az.outputs.repo }}:${{ steps.gitversion.outputs.majorMinorPatch }}
           build-args: |
             VERSION=${{ steps.gitversion.outputs.assemblySemVer }}
