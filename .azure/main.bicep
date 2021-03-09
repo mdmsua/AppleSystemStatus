@@ -1,4 +1,4 @@
-param globalPrefix string = ''
+param globalPrefix string = resourceGroup().name
 param storageAccountName string = globalPrefix
 param sqlServerName string = globalPrefix
 param sqlServerSaLogin string
@@ -20,19 +20,20 @@ param keyVaultName string = globalPrefix
 param workspaceId string  = ''
 
 param primaryLocation string = resourceGroup().location
-param secondaryLocation string = 'westeurope'
+param secondaryLocation string = resourceGroup().location
 
 var acr = '${containerRegistryName}${environment().suffixes.acrLoginServer}'
+var keyPrefix = siteName == globalPrefix ? '' : '${siteName}-'
 
 var acrUsernameKey = 'RegistryUsername'
 var acrPasswordKey = 'RegistryPassword'
-var sqlConnectionStringKey = 'DatabaseConnectionString'
 var aiInstrumentationKey = 'InstrumentationKey'
 var storageConnectionStringKey = 'StorageConnectionString'
 var sqlServerUsernameKey = 'ServerUsername'
 var sqlServerPasswordKey = 'ServerPassword'
-var sqlDatabaseUsernameKey = 'DatabaseUsername'
-var sqlDatabasePasswordKey = 'DatabasePassword'
+var sqlDatabaseUsernameKey = '${keyPrefix}DatabaseUsername'
+var sqlDatabasePasswordKey = '${keyPrefix}DatabasePassword'
+var sqlConnectionStringKey = '${keyPrefix}DatabaseConnectionString'
 
 var sqlHost = '${sqlServerName}${environment().suffixes.sqlServerHostname}'
 

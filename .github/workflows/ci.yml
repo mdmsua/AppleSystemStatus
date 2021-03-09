@@ -56,8 +56,23 @@ jobs:
         with:
           inlineScript: |
             cd .azure
-            az deployment sub validate -l westeurope -f sandbox.json -n ${{ env.name }} --no-prompt -p name=${{ steps.id.outputs.id }} branch=${GITHUB_REF:11} oid=${{ secrets.CLIENT_ID }} sqlServerSaLogin=${{ steps.db.outputs.srvUser }} sqlServerSaPassword=${{ steps.db.outputs.srvPass }} sqlServerLogin=${{ steps.db.outputs.appUser }} sqlServerPassword=${{ steps.db.outputs.appPass }}
-            outputs=$(az deployment sub create -l westeurope -f sandbox.json -n ${{ env.name }} --no-prompt -p name=${{ steps.id.outputs.id }} branch=${GITHUB_REF:11} oid=${{ secrets.CLIENT_ID }} sqlServerSaLogin=${{ steps.db.outputs.srvUser }} sqlServerSaPassword=${{ steps.db.outputs.srvPass }} sqlServerLogin=${{ steps.db.outputs.appUser }} sqlServerPassword=${{ steps.db.outputs.appPass }} | jq '.properties.outputs')
+            az deployment sub validate -l westeurope -f sandbox.json -n ${{ env.name }} --no-prompt -p \
+              name=${{ steps.id.outputs.id }} \
+              branch=${GITHUB_REF:11} \
+              oid=${{ secrets.CLIENT_ID }} \
+              sqlServerSaLogin=${{ steps.db.outputs.srvUser }} \
+              sqlServerSaPassword=${{ steps.db.outputs.srvPass }} \
+              sqlServerLogin=${{ steps.db.outputs.appUser }} \
+              sqlServerPassword=${{ steps.db.outputs.appPass }} 
+            outputs=$(az deployment sub create -l westeurope -f sandbox.json -n ${{ env.name }} --no-prompt -p \
+              name=${{ steps.id.outputs.id }} \
+              branch=${GITHUB_REF:11} \
+              oid=${{ secrets.CLIENT_ID }} \
+              sqlServerSaLogin=${{ steps.db.outputs.srvUser }} \
+              sqlServerSaPassword=${{ steps.db.outputs.srvPass }} \
+              sqlServerLogin=${{ steps.db.outputs.appUser }} \
+              sqlServerPassword=${{ steps.db.outputs.appPass }} \
+              | jq '.properties.outputs')
             echo "::set-output name=acr::$(echo $outputs | jq -r '.acrHost.value')"
             echo "::set-output name=repo::$(echo $outputs | jq -r '.acrRepo.value')"
             echo "::set-output name=sql::$(echo $outputs | jq -r '.sqlHost.value')"
@@ -68,12 +83,12 @@ jobs:
     needs: az
     steps:
       - uses: actions/checkout@v2
-      - uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 3.1.x
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
       - uses: azure/get-keyvault-secrets@v1
         id: kv
         with:

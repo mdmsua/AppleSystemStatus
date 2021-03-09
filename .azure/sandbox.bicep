@@ -11,6 +11,8 @@ param sqlServerPassword string {
   secure: true
 }
 param oid string
+param primaryLocation string = deployment().location
+param secondaryLocation string = deployment().location
 
 var domain = 'elcontoso.com'
 var hostname = '${name}.${domain}'
@@ -28,7 +30,8 @@ module main 'main.bicep' = {
   name: '${deployment().name}-main'
   params: {
     oid: oid
-    globalPrefix: name
+    primaryLocation: primaryLocation
+    secondaryLocation: secondaryLocation
     sqlServerSaLogin: sqlServerSaLogin
     sqlServerSaPassword: sqlServerSaPassword
     sqlServerLogin: sqlServerLogin
