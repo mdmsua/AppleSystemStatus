@@ -17,6 +17,7 @@ param insightsName string = globalPrefix
 param serverFarmName string = globalPrefix
 param siteName string = globalPrefix
 param keyVaultName string = globalPrefix
+param keyVaultProtection bool = false
 param workspaceId string  = ''
 
 param primaryLocation string = resourceGroup().location
@@ -99,6 +100,7 @@ module vault 'vault.bicep' = {
   params: {
     name: keyVaultName
     location: primaryLocation
+    protect: keyVaultProtection
     sid: sid
     policies: [
       {

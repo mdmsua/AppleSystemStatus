@@ -3,6 +3,7 @@ param location string
 param sid string
 param secrets array
 param policies array
+param protect bool
 
 resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
   name: name
@@ -70,7 +71,8 @@ resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
     enabledForDeployment: false
     enabledForDiskEncryption: false
     enabledForTemplateDeployment: false
-    enableSoftDelete: false
+    enableSoftDelete: protect
+    enablePurgeProtection: protect
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Allow'

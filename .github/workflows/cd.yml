@@ -45,6 +45,7 @@ jobs:
               sqlServerLogin=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabaseUsername)] }} \
               sqlServerPassword=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabasePassword)] }} \
               siteName=${{ env.SITE_NAME }} \
+              keyVaultProtection=true \
               secondaryLocation=westeurope
             outputs=$(az deployment group create -g ${{ secrets.GLOBAL_NAME }} -f main.json -n ${{ env.name }} --no-prompt -p \
               oid=${{ secrets.CLIENT_ID }} \
@@ -54,6 +55,7 @@ jobs:
               sqlServerPassword=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabasePassword)] }} \
               siteName=${{ env.SITE_NAME }} \
               secondaryLocation=westeurope \
+              keyVaultProtection=true \
               | jq '.properties.outputs')
             echo "::set-output name=acr::$(echo $outputs | jq -r '.acrHost.value')"
             echo "::set-output name=repo::$(echo $outputs | jq -r '.acrRepo.value')"
