@@ -46,7 +46,7 @@ jobs:
               sqlServerPassword=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabasePassword)] }} \
               siteName=${{ env.SITE_NAME }} \
               secondaryLocation=westeurope
-            outputs=$(az deployment group create -g ${{ secrets.GLOBAL_NAME }} -f main.json -n $name --no-prompt -p \
+            outputs=$(az deployment group create -g ${{ secrets.GLOBAL_NAME }} -f main.json -n ${{ env.name }} --no-prompt -p \
               oid=${{ secrets.CLIENT_ID }} \
               sqlServerSaLogin=${{ steps.az.outputs.ServerUsername }} \
               sqlServerSaPassword=${{ steps.az.outputs.ServerPassword }} \
