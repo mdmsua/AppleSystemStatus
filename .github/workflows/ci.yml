@@ -34,9 +34,9 @@ jobs:
           secrets: "ServerUsername,ServerPassword,DatabaseUsername,DatabasePassword"
       - id: db
         env:
-          srvUser: $(openssl rand -hex 4)
+          srvUser: sa$(openssl rand -hex 6)
           srvPass: $(openssl rand -base64 8)
-          appUser: $(openssl rand -hex 4)
+          appUser: db$(openssl rand -hex 6)
           appPass: $(openssl rand -base64 8)
         run: |
           echo "::set-output name=srvUser::${{ steps.kv.outputs.ServerUsername || env.srvUser }}"
