@@ -1,8 +1,6 @@
 param farmName string
 param siteName string
 param location string
-param vaultName string
-param registryName string
 
 resource farm 'Microsoft.Web/serverfarms@2020-06-01' = {
   name: farmName
@@ -34,51 +32,6 @@ resource site 'Microsoft.Web/sites@2020-06-01' = {
     reserved: true
     siteConfig: {
       alwaysOn: true
-      appSettings: [
-        {
-          name: 'AzureWebJobsStorage'
-          value: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-AzureWebJobsStorage)'
-        }
-        {
-          name: 'FUNCTIONS_EXTENSION_VERSION'
-          value: '~3'
-        }
-        {
-          name: 'DOCKER_ENABLE_CI'
-          value: 'true'
-        }
-        {
-          name: 'DOCKER_REGISTRY_SERVER_URL'
-          value: 'https://${registryName}${environment().suffixes.acrLoginServer}'
-        }
-        {
-          name: 'DOCKER_REGISTRY_SERVER_USERNAME'
-          value: registryName
-        }
-        {
-          name: 'DOCKER_REGISTRY_SERVER_PASSWORD'
-          value: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-DockerRegistryServerPassword)'
-        }
-        {
-          name: 'DOCKER_CUSTOM_IMAGE_NAME'
-          value: 'DOCKER|${registryName}${environment().suffixes.acrLoginServer}/${siteName}:latest'
-        }
-        {
-          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-          value: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-ApplicationInsightsInstrumentationKey)'
-        }
-        {
-          name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
-          value: 'false'
-        }
-      ]
-      connectionStrings: [
-        {
-          name: 'AppleSystemStatus'
-          type: 'SQLAzure'
-          connectionString: '@Microsoft.KeyVault(VaultName=${vaultName};SecretName=${siteName}-AppleSystemStatus)'
-        }
-      ]
       ftpsState: 'Disabled'
       healthCheckPath: '/healthcheck'
       http20Enabled: true
@@ -92,6 +45,13 @@ resource site 'Microsoft.Web/sites@2020-06-01' = {
   }
 }
 
-output publishingUsername string = list(resourceId('Microsoft.Web/sites/config', siteName, 'publishingcredentials'), site.apiVersion).properties.publishingUserName
-output publishingPassword string = list(resourceId('Microsoft.Web/sites/config', siteName, 'publishingcredentials'), site.apiVersion).properties.publishingPassword
-output objectId string = site.identity.principalId
+var scmUri = list(resourceId('Microsoft.Web/sites/config', siteName, 'publishingcredentials'), site.apiVersion).properties.scmUri
+
+output site object = {
+  name: site.name
+  webhook: '${scmUri}/docker/hook'
+  oid: site.identity.principalId
+  image: '${siteName}:latest'
+  verification: site.properties.customDomainVerificationId
+  farm: farm.id
+}

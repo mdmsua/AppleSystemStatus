@@ -2,7 +2,7 @@ using System;
 using System.Net.Http;
 using System.Net.Security;
 using System.Reflection;
-
+using AppleSystemStatus.Interceptors;
 using AppleSystemStatus.Services;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +21,8 @@ namespace AppleSystemStatus
             {
                 var configuration = provider.GetRequiredService<IConfiguration>();
                 var databaseConnectionString = configuration.GetConnectionString("AppleSystemStatus");
-                context.UseSqlServer(databaseConnectionString);
+                var telemetryInterceptor = provider.GetRequiredService<TelemetryInterceptor>();
+                context.UseSqlServer(databaseConnectionString).AddInterceptors(telemetryInterceptor);
             });
 
             builder.Services
@@ -31,6 +32,8 @@ namespace AppleSystemStatus
             builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
             builder.Services.AddScoped<RepositoryService>();
+
+            builder.Services.AddScoped<TelemetryInterceptor>();
 
             builder.Services.AddHealthChecks().AddDbContextCheck<AppleSystemStatusDbContext>();
 

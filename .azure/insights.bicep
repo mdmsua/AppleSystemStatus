@@ -1,10 +1,11 @@
 param name string
 param location string
 param workspaceId string
+param workspaceLocation string
 
 resource workspace 'Microsoft.OperationalInsights/workspaces@2020-10-01' = if (empty(workspaceId)) {
   name: name
-  location: 'germanywestcentral'
+  location: workspaceLocation
   properties: {
     publicNetworkAccessForIngestion: 'Disabled'
     publicNetworkAccessForQuery: 'Disabled'

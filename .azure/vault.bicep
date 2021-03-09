@@ -1,22 +1,10 @@
 param name string
 param location string
-param siteId string
 param sid string
-param siteName string
-param sqlConnectionString string {
-  secure: true
-}
-param storageConnectionString string {
-  secure: true
-}
-param instrumentationKey string {
-  secure: true
-}
-param registryPassword string {
-  secure: true
-}
+param secrets array
+param policies array
 
-resource vault 'Microsoft.KeyVault/vaults@2020-04-01-preview' = {
+resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
   name: name
   location: location
   properties: {
@@ -26,73 +14,63 @@ resource vault 'Microsoft.KeyVault/vaults@2020-04-01-preview' = {
     }
     tenantId: subscription().tenantId
     accessPolicies: [
-      {
-        tenantId: subscription().tenantId
-        objectId: siteId
-        permissions: {
-          secrets: [
-            'get'
-          ]
-        }
-      }
-      {
-        tenantId: subscription().tenantId
-        objectId: sid
-        permissions: {
-          certificates: [
-            'backup'
-            'create'
-            'delete'
-            'deleteissuers'
-            'get'
-            'getissuers'
-            'import'
-            'list'
-            'listissuers'
-            'managecontacts'
-            'manageissuers'
-            'purge'
-            'recover'
-            'restore'
-            'setissuers'
-            'update'
-          ]
-          keys: [
-            'backup'
-            'create'
-            'decrypt'
-            'delete'
-            'encrypt'
-            'get'
-            'import'
-            'list'
-            'purge'
-            'recover'
-            'restore'
-            'sign'
-            'unwrapKey'
-            'update'
-            'verify'
-            'wrapKey'
-          ]
-          secrets: [
-            'backup'
-            'delete'
-            'get'
-            'list'
-            'purge'
-            'recover'
-            'restore'
-            'set'
-          ]
-        }
-      }
+    //   {
+    //     tenantId: subscription().tenantId
+    //     objectId: sid
+    //     permissions: {
+    //       certificates: [
+    //         'backup'
+    //         'create'
+    //         'delete'
+    //         'deleteissuers'
+    //         'get'
+    //         'getissuers'
+    //         'import'
+    //         'list'
+    //         'listissuers'
+    //         'managecontacts'
+    //         'manageissuers'
+    //         'purge'
+    //         'recover'
+    //         'restore'
+    //         'setissuers'
+    //         'update'
+    //       ]
+    //       keys: [
+    //         'backup'
+    //         'create'
+    //         'decrypt'
+    //         'delete'
+    //         'encrypt'
+    //         'get'
+    //         'import'
+    //         'list'
+    //         'purge'
+    //         'recover'
+    //         'restore'
+    //         'sign'
+    //         'unwrapKey'
+    //         'update'
+    //         'verify'
+    //         'wrapKey'
+    //       ]
+    //       secrets: [
+    //         'backup'
+    //         'delete'
+    //         'get'
+    //         'list'
+    //         'purge'
+    //         'recover'
+    //         'restore'
+    //         'set'
+    //       ]
+    //     }
+    //   }
     ]
     enabledForDeployment: false
     enabledForDiskEncryption: false
     enabledForTemplateDeployment: false
-    enablePurgeProtection: true
-    enableSoftDelete: true
+    enableSoftDelete: false
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Allow'
@@ -103,30 +81,22 @@ resource vault 'Microsoft.KeyVault/vaults@2020-04-01-preview' = {
   }
 }
 
-resource sqlSecret 'Microsoft.KeyVault/vaults/secrets@2020-04-01-preview' = {
-  name: '${name}/${siteName}-AppleSystemStatus'
+resource accessPolicies 'Microsoft.KeyVault/vaults/accessPolicies@2019-09-01' = {
+  name: any('${vault.name}/add')
   properties: {
-    value: sqlConnectionString
+    accessPolicies: [for policy in policies: {
+      tenantId: subscription().tenantId
+      objectId: policy.oid
+      permissions: {
+        secrets: policy.permissions
+      }
+    }]
   }
 }
 
-resource storageSecret 'Microsoft.KeyVault/vaults/secrets@2020-04-01-preview' = {
-  name: '${name}/${siteName}-AzureWebJobsStorage'
+resource secret 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = [for secret in secrets: {
+  name: '${vault.name}/${secret.name}'
   properties: {
-    value: storageConnectionString
+    value: secret.value
   }
-}
-
-resource instrumentationSecret 'Microsoft.KeyVault/vaults/secrets@2020-04-01-preview' = {
-  name: '${name}/${siteName}-ApplicationInsightsInstrumentationKey'
-  properties: {
-    value: instrumentationKey
-  }
-}
-
-resource registrySecret 'Microsoft.KeyVault/vaults/secrets@2020-04-01-preview' = {
-  name: '${name}/${siteName}-DockerRegistryServerPassword'
-  properties: {
-    value: registryPassword
-  }
-}
+}]

@@ -19,7 +19,7 @@ resource server 'Microsoft.Sql/servers@2019-06-01-preview' = {
   }
 }
 
-resource administrator 'Microsoft.Sql/servers/administrators@2019-06-01-preview' = {
+resource administrator 'Microsoft.Sql/servers/administrators@2019-06-01-preview' = if (!(empty(adLogin)) && !(empty(sid))) {
   name: '${name}/ActiveDirectory'
   dependsOn: [
     server

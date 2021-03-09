@@ -1,0 +1,26 @@
+name: pr
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-20.04
+    environment: sandbox
+    steps:
+      - uses: actions/checkout@v2
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: azure/cli@v1
+        env:
+          branch: "${{ github.head_ref }}"
+        with:
+          inlineScript: |
+            id=$(az deployment sub create -l westeurope -f .azure/id.json --no-prompt -p name=${{ env.branch }} | jq -r '.properties.outputs.id.value')
+            az group delete -n $id -y
+            az network dns record-set cname delete -n $id -z elcontoso.com -g elcontoso -y
+            az network dns record-set txt delete -n asuid.$id -z elcontoso.com -g elcontoso -y
+      

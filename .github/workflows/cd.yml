@@ -1,0 +1,126 @@
+name: cd
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  SITE_NAME: aaplss
+
+jobs:
+  az:
+    runs-on: ubuntu-20.04
+    outputs:
+      acr: ${{ steps.az.outputs.acr }}
+      repo: ${{ steps.az.outputs.repo }}
+      sql: ${{ steps.az.outputs.sql }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: azure/get-keyvault-secrets@v1
+        id: kv
+        with:
+          keyvault: ${{ secrets.GLOBAL_NAME }}
+          secrets: "ServerUsername,ServerPassword,${{ env.SITE_NAME }}-DatabaseUsername,${{ env.SITE_NAME }}-DatabasePassword"
+      - run: |
+          curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x ./bicep
+          ./bicep build main.bicep
+          rm ./bicep
+        working-directory: .azure
+      - uses: azure/cli@v1
+        id: az
+        env:
+          name: $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S")
+        with:
+          inlineScript: |
+            cd .azure
+            az deployment group validate -g ${{ secrets.GLOBAL_NAME }} -f main.json --no-prompt -p \
+              oid=${{ secrets.CLIENT_ID }} \
+              sqlServerSaLogin=${{ steps.az.outputs.ServerUsername }} \
+              sqlServerSaPassword=${{ steps.az.outputs.ServerPassword }} \
+              sqlServerLogin=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabaseUsername)] }} \
+              sqlServerPassword=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabasePassword)] }} \
+              siteName=${{ env.SITE_NAME }} \
+              secondaryLocation=westeurope
+            outputs=$(az deployment group create -g ${{ secrets.GLOBAL_NAME }} -f main.json -n $name --no-prompt -p \
+              oid=${{ secrets.CLIENT_ID }} \
+              sqlServerSaLogin=${{ steps.az.outputs.ServerUsername }} \
+              sqlServerSaPassword=${{ steps.az.outputs.ServerPassword }} \
+              sqlServerLogin=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabaseUsername)] }} \
+              sqlServerPassword=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabasePassword)] }} \
+              siteName=${{ env.SITE_NAME }} \
+              secondaryLocation=westeurope \
+              | jq '.properties.outputs')
+            echo "::set-output name=acr::$(echo $outputs | jq -r '.acrHost.value')"
+            echo "::set-output name=repo::$(echo $outputs | jq -r '.acrRepo.value')"
+            echo "::set-output name=sql::$(echo $outputs | jq -r '.sqlHost.value')"
+
+  db:
+    runs-on: ubuntu-20.04
+    needs: az
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.x
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: azure/get-keyvault-secrets@v1
+        id: kv
+        with:
+          keyvault: ${{ secrets.GLOBAL_NAME }}
+          secrets: "ServerUsername,ServerPassword,${{ env.SITE_NAME }}-DatabaseUsername,${{ env.SITE_NAME }}-DatabasePassword"
+      - run: |
+          dotnet tool restore
+          dotnet restore
+          dotnet build --no-restore --configuration Release
+          dotnet test --no-build --configuration Release
+          dotnet ef database update --no-build --configuration Release --project src/AppleSystemStatus
+        env:
+          DatabaseConnectionString: "Server=tcp:${{ needs.az.outputs.sql }},1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${{ steps.kv.outputs.ServerUsername }};Password=${{ steps.kv.outputs.ServerPassword }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+          ApplicationUsername: ${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabaseUsername)] }}
+          ApplicationPassword: ${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabasePassword)] }}
+
+  acr:
+    runs-on: ubuntu-20.04
+    needs:
+      - az
+      - db
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: gittools/actions/gitversion/setup@v0.9.9
+        with:
+          versionSpec: '5.x'
+      - uses: gittools/actions/gitversion/execute@v0.9.9
+        id: gitversion
+        with:
+          useConfigFile: true
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: azure/get-keyvault-secrets@v1
+        with:
+          keyvault: ${{ secrets.GLOBAL_NAME }}
+          secrets: 'RegistryUsername,RegistryPassword'
+        id: kv
+      - uses: docker/setup-buildx-action@v1
+      - uses: docker/login-action@v1
+        with:
+          registry: ${{ needs.az.outputs.acr }}
+          username: ${{ steps.kv.outputs.RegistryUsername }}
+          password: ${{ steps.kv.outputs.RegistryPassword }}
+      - uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: |
+            ${{ needs.az.outputs.repo }}:latest
+            ${{ needs.az.outputs.repo }}:${{ steps.gitversion.outputs.majorMinorPatch }}
+          build-args: |
+            VERSION=${{ steps.gitversion.outputs.assemblySemVer }}
