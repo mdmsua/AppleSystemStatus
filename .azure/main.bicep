@@ -75,6 +75,7 @@ module insights 'insights.bicep' = {
     name: insightsName
     location: secondaryLocation
     workspaceId: workspaceId
+    workspaceLocation: primaryLocation
   }
 }
 
