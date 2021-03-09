@@ -36,7 +36,7 @@ jobs:
         env:
           srvUser: sa${{ steps.id.outputs.id }}
           srvPass: $(openssl rand -base64 8)
-          appUser: db${{ steps.id.outputs.id }}
+          appUser: ${{ steps.id.outputs.id }}
           appPass: $(openssl rand -base64 8)
         run: |
           echo "::set-output name=srvUser::${{ steps.kv.outputs.ServerUsername || env.srvUser }}"
