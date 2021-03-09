@@ -72,7 +72,6 @@ resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
     enabledForDiskEncryption: false
     enabledForTemplateDeployment: false
     enableSoftDelete: protect
-    enablePurgeProtection: protect
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Allow'
