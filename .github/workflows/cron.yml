@@ -1,0 +1,23 @@
+name: cron
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-20.04
+    environment: sandbox
+    env:
+      rg: elcontoso
+      zn: elcontoso.com
+    steps:
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          inlineScript: |
+            for rg in $(az group list --query "[?tags.branch].name" -o tsv); do \
+              az network dns record-set txt list -g ${{ env.rg }} -z ${{ env.zn }} --query "[?name=='asuid.$rg'].name" -o tsv | xargs az network dns record-set txt delete -y -g ${{ env.rg }} -z ${{ env.zn }} -n; \
+              az network dns record-set cname list -g ${{ env.rg }} -z ${{ env.zn }} --query "[?name=='$rg'].name" -o tsv | xargs az network dns record-set cname delete -y -g ${{ env.rg }} -z ${{ env.zn }} -n; \
+              az group delete -n $rg -y; \
+            done
