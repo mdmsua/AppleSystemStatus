@@ -60,6 +60,8 @@ jobs:
               name=${{ steps.id.outputs.id }} \
               branch=${GITHUB_REF:11} \
               oid=${{ secrets.CLIENT_ID }} \
+              sid=${{ secrets.AD_SID }} \
+              sqlServerAdLogin=${{ secrets.AD_LOGIN }} \
               sqlServerSaLogin=${{ steps.db.outputs.srvUser }} \
               sqlServerSaPassword=${{ steps.db.outputs.srvPass }} \
               sqlServerLogin=${{ steps.db.outputs.appUser }} \
@@ -68,6 +70,8 @@ jobs:
               name=${{ steps.id.outputs.id }} \
               branch=${GITHUB_REF:11} \
               oid=${{ secrets.CLIENT_ID }} \
+              sid=${{ secrets.AD_SID }} \
+              sqlServerAdLogin=${{ secrets.AD_LOGIN }} \
               sqlServerSaLogin=${{ steps.db.outputs.srvUser }} \
               sqlServerSaPassword=${{ steps.db.outputs.srvPass }} \
               sqlServerLogin=${{ steps.db.outputs.appUser }} \

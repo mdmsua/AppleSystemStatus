@@ -2,6 +2,7 @@ targetScope = 'subscription'
 
 param name string
 param branch string
+param sqlServerAdLogin string
 param sqlServerSaLogin string
 param sqlServerSaPassword string {
   secure: true
@@ -10,6 +11,7 @@ param sqlServerLogin string
 param sqlServerPassword string {
   secure: true
 }
+param sid string
 param oid string
 param primaryLocation string = deployment().location
 param secondaryLocation string = deployment().location
