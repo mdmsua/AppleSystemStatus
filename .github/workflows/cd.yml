@@ -40,19 +40,19 @@ jobs:
             cd .azure
             az deployment group validate -g ${{ secrets.GLOBAL_NAME }} -f main.json --no-prompt -p \
               oid=${{ secrets.CLIENT_ID }} \
-              sqlServerSaLogin=${{ steps.az.outputs.ServerUsername }} \
-              sqlServerSaPassword=${{ steps.az.outputs.ServerPassword }} \
-              sqlServerLogin=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabaseUsername)] }} \
-              sqlServerPassword=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabasePassword)] }} \
+              sqlServerSaLogin=${{ steps.kv.outputs.ServerUsername }} \
+              sqlServerSaPassword=${{ steps.kv.outputs.ServerPassword }} \
+              sqlServerLogin=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, 'DatabaseUsername')] }} \
+              sqlServerPassword=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, 'DatabasePassword')] }} \
               siteName=${{ env.SITE_NAME }} \
               keyVaultProtection=true \
               secondaryLocation=westeurope
             outputs=$(az deployment group create -g ${{ secrets.GLOBAL_NAME }} -f main.json -n ${{ env.name }} --no-prompt -p \
               oid=${{ secrets.CLIENT_ID }} \
-              sqlServerSaLogin=${{ steps.az.outputs.ServerUsername }} \
-              sqlServerSaPassword=${{ steps.az.outputs.ServerPassword }} \
-              sqlServerLogin=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabaseUsername)] }} \
-              sqlServerPassword=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabasePassword)] }} \
+              sqlServerSaLogin=${{ steps.kv.outputs.ServerUsername }} \
+              sqlServerSaPassword=${{ steps.kv.outputs.ServerPassword }} \
+              sqlServerLogin=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, 'DatabaseUsername')] }} \
+              sqlServerPassword=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, 'DatabasePassword')] }} \
               siteName=${{ env.SITE_NAME }} \
               secondaryLocation=westeurope \
               keyVaultProtection=true \
@@ -85,8 +85,8 @@ jobs:
           dotnet ef database update --no-build --configuration Release --project src/AppleSystemStatus
         env:
           DatabaseConnectionString: "Server=tcp:${{ needs.az.outputs.sql }},1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${{ steps.kv.outputs.ServerUsername }};Password=${{ steps.kv.outputs.ServerPassword }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
-          ApplicationUsername: ${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabaseUsername)] }}
-          ApplicationPassword: ${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, steps.az.outputs.DatabasePassword)] }}
+          ApplicationUsername: ${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, 'DatabaseUsername')] }}
+          ApplicationPassword: ${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, 'DatabasePassword')] }}
 
   acr:
     runs-on: ubuntu-20.04
