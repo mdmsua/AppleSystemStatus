@@ -5,6 +5,61 @@ param secrets array
 param policies array
 param protect bool
 
+var initialAccessPolicies = empty(sid) ? [] : [
+  {
+    tenantId: subscription().tenantId
+    objectId: sid
+    permissions: {
+      certificates: [
+        'backup'
+        'create'
+        'delete'
+        'deleteissuers'
+        'get'
+        'getissuers'
+        'import'
+        'list'
+        'listissuers'
+        'managecontacts'
+        'manageissuers'
+        'purge'
+        'recover'
+        'restore'
+        'setissuers'
+        'update'
+      ]
+      keys: [
+        'backup'
+        'create'
+        'decrypt'
+        'delete'
+        'encrypt'
+        'get'
+        'import'
+        'list'
+        'purge'
+        'recover'
+        'restore'
+        'sign'
+        'unwrapKey'
+        'update'
+        'verify'
+        'wrapKey'
+      ]
+      secrets: [
+        'backup'
+        'delete'
+        'get'
+        'list'
+        'purge'
+        'recover'
+        'restore'
+        'set'
+      ]
+    }
+  }
+]
+
 resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
   name: name
   location: location
@@ -14,60 +69,7 @@ resource vault 'Microsoft.KeyVault/vaults@2019-09-01' = {
       name: 'standard'
     }
     tenantId: subscription().tenantId
-    accessPolicies: [
-    //   {
-    //     tenantId: subscription().tenantId
-    //     objectId: sid
-    //     permissions: {
-    //       certificates: [
-    //         'backup'
-    //         'create'
-    //         'delete'
-    //         'deleteissuers'
-    //         'get'
-    //         'getissuers'
-    //         'import'
-    //         'list'
-    //         'listissuers'
-    //         'managecontacts'
-    //         'manageissuers'
-    //         'purge'
-    //         'recover'
-    //         'restore'
-    //         'setissuers'
-    //         'update'
-    //       ]
-    //       keys: [
-    //         'backup'
-    //         'create'
-    //         'decrypt'
-    //         'delete'
-    //         'encrypt'
-    //         'get'
-    //         'import'
-    //         'list'
-    //         'purge'
-    //         'recover'
-    //         'restore'
-    //         'sign'
-    //         'unwrapKey'
-    //         'update'
-    //         'verify'
-    //         'wrapKey'
-    //       ]
-    //       secrets: [
-    //         'backup'
-    //         'delete'
-    //         'get'
-    //         'list'
-    //         'purge'
-    //         'recover'
-    //         'restore'
-    //         'set'
-    //       ]
-    //     }
-    //   }
-    ]
+    accessPolicies: initialAccessPolicies
     enabledForDeployment: false
     enabledForDiskEncryption: false
     enabledForTemplateDeployment: false
