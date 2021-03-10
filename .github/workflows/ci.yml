@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  az:
-    runs-on: ubuntu-20.04
+  main:
+    runs-on: ubuntu-latest
     environment: sandbox
     outputs:
       kv: ${{ steps.id.outputs.id }}
@@ -15,41 +15,50 @@ jobs:
       repo: ${{ steps.az.outputs.repo }}
       sql: ${{ steps.az.outputs.sql }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: azure/login@v1
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Login to Azure
+        uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - uses: azure/cli@v1
+      - name: Generate unique identifier
+        uses: azure/cli@v1
         id: id
         with:
           inlineScript: |
             id=$(az deployment sub create -l westeurope -f .azure/id.json --no-prompt -p name=${GITHUB_REF:11} | jq -r '.properties.outputs.id.value')
             echo "::set-output name=id::$id"
-      - uses: azure/get-keyvault-secrets@v1
+      - name: Fetch KeyVault SQL secrets
+        uses: azure/get-keyvault-secrets@v1
         continue-on-error: true
         timeout-minutes: 1
-        id: kv
+        id: sql
         with:
           keyvault: ${{ steps.id.outputs.id }}
           secrets: "ServerUsername,ServerPassword,DatabaseUsername,DatabasePassword"
-      - id: db
+      - name: Generate SQL credentials
+        id: db
         env:
           srvUser: sa${{ steps.id.outputs.id }}
           srvPass: $(openssl rand -base64 8)
           appUser: ${{ steps.id.outputs.id }}
           appPass: $(openssl rand -base64 8)
         run: |
-          echo "::set-output name=srvUser::${{ steps.kv.outputs.ServerUsername || env.srvUser }}"
-          echo "::set-output name=srvPass::${{ steps.kv.outputs.ServerPassword || env.srvPass }}"
-          echo "::set-output name=appUser::${{ steps.kv.outputs.DatabaseUsername || env.appUser }}"
-          echo "::set-output name=appPass::${{ steps.kv.outputs.DatabasePassword || env.appPass }}"
-      - run: |
+          echo "::set-output name=srvUser::${{ steps.sql.outputs.ServerUsername || env.srvUser }}"
+          echo "::set-output name=srvPass::${{ steps.sql.outputs.ServerPassword || env.srvPass }}"
+          echo "::set-output name=appUser::${{ steps.sql.outputs.DatabaseUsername || env.appUser }}"
+          echo "::set-output name=appPass::${{ steps.sql.outputs.DatabasePassword || env.appPass }}"
+      - name: Download Bicep CLI & build template
+        run: |
           curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
           chmod +x ./bicep
           ./bicep build sandbox.bicep
           rm ./bicep
         working-directory: .azure
-      - uses: azure/cli@v1
+      - name: Validate deployment
+        uses: azure/cli@v1
         id: az
         env:
           name: $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S")
@@ -66,6 +75,14 @@ jobs:
               sqlServerSaPassword=${{ steps.db.outputs.srvPass }} \
               sqlServerLogin=${{ steps.db.outputs.appUser }} \
               sqlServerPassword=${{ steps.db.outputs.appPass }} 
+      - name: Create deployment
+        uses: azure/cli@v1
+        id: az
+        env:
+          name: $(TZ=Europe/Berlin date "+gh_%Y-%m-%d_%H-%M-%S")
+        with:
+          inlineScript: |
+            cd .azure
             outputs=$(az deployment sub create -l westeurope -f sandbox.json -n ${{ env.name }} --no-prompt -p \
               name=${{ steps.id.outputs.id }} \
               branch=${GITHUB_REF:11} \
@@ -80,71 +97,41 @@ jobs:
             echo "::set-output name=acr::$(echo $outputs | jq -r '.acrHost.value')"
             echo "::set-output name=repo::$(echo $outputs | jq -r '.acrRepo.value')"
             echo "::set-output name=sql::$(echo $outputs | jq -r '.sqlHost.value')"
-
-  db:
-    runs-on: ubuntu-20.04
-    environment: sandbox
-    needs: az
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-dotnet@v1
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 3.1.x
-      - uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - uses: azure/get-keyvault-secrets@v1
-        id: kv
-        with:
-          keyvault: ${{ needs.az.outputs.kv }}
-          secrets: "ServerUsername,ServerPassword,DatabaseUsername,DatabasePassword"
-      - run: |
+      - name: Build & test application
+        run: |
           dotnet tool restore
           dotnet restore
           dotnet build --no-restore --configuration Release
           dotnet test --no-build --configuration Release
-          dotnet ef database update --no-build --configuration Release --project src/AppleSystemStatus
+      - name: Update database
         env:
-          DatabaseConnectionString: "Server=tcp:${{ needs.az.outputs.sql }},1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${{ steps.kv.outputs.ServerUsername }};Password=${{ steps.kv.outputs.ServerPassword }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
-          ApplicationUsername: ${{ steps.kv.outputs.DatabaseUsername }}
-          ApplicationPassword: ${{ steps.kv.outputs.DatabasePassword }}
-
-  acr:
-    runs-on: ubuntu-20.04
-    environment: sandbox
-    needs:
-      - az
-      - db
-    steps:
-      - uses: actions/checkout@v2
+          DatabaseConnectionString: "Server=tcp:${{ steps.az.outputs.sql }},1433;Initial Catalog=AppleSystemStatus;Persist Security Info=False;User ID=${{ steps.db.outputs.srvUser }};Password=${{ steps.db.outputs.srvPass }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+          ApplicationUsername: ${{ steps.db.outputs.appUser }}
+          ApplicationPassword: ${{ steps.db.outputs.appPass }}
+        run: |
+          dotnet ef database update --no-build --configuration Release --project src/AppleSystemStatus
+      - name: Fetch KeyVault ACR secrets
+        uses: azure/get-keyvault-secrets@v1
+        id: acr
         with:
-          fetch-depth: 0
-      - uses: gittools/actions/gitversion/setup@v0.9.9
+          keyvault: ${{ steps.id.outputs.id }}
+          secrets: "RegistryUsername,RegistryPassword"
+      - name: Login to Docker Registry
+        uses: docker/login-action@v1
         with:
-          versionSpec: '5.x'
-      - uses: gittools/actions/gitversion/execute@v0.9.9
-        id: gitversion
-        with:
-          useConfigFile: true
-      - uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - uses: azure/get-keyvault-secrets@v1
-        with:
-          keyvault: ${{ needs.az.outputs.kv }}
-          secrets: 'RegistryUsername,RegistryPassword'
-        id: kv
-      - uses: docker/setup-buildx-action@v1
-      - uses: docker/login-action@v1
-        with:
-          registry: ${{ needs.az.outputs.acr }}
-          username: ${{ steps.kv.outputs.RegistryUsername }}
-          password: ${{ steps.kv.outputs.RegistryPassword }}
-      - uses: docker/build-push-action@v2
+          registry: ${{ steps.az.outputs.acr }}
+          username: ${{ steps.acr.outputs.RegistryUsername }}
+          password: ${{ steps.acr.outputs.RegistryPassword }}
+      - name: Build & push Docker image
+        uses: docker/build-push-action@v2
         with:
           push: true
           tags: |
-            ${{ needs.az.outputs.repo }}:latest
-            ${{ needs.az.outputs.repo }}:${{ steps.gitversion.outputs.majorMinorPatch }}
+            ${{ steps.az.outputs.repo }}:latest
+            ${{ steps.az.outputs.repo }}:${{ steps.gitversion.outputs.majorMinorPatch }}
           build-args: |
             VERSION=${{ steps.gitversion.outputs.assemblySemVer }}
