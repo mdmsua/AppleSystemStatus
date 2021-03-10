@@ -41,7 +41,7 @@ jobs:
             az deployment group validate -g ${{ secrets.GLOBAL_NAME }} -f main.json --no-prompt -p \
               oid=${{ secrets.CLIENT_ID }} \
               sid=${{ secrets.AD_SID }} \
-              sqlServerAdLogin=${{ secrets.AD_LOGIN }} \
+              adLogin=${{ secrets.AD_LOGIN }} \
               sqlServerSaLogin=${{ steps.kv.outputs.ServerUsername }} \
               sqlServerSaPassword=${{ steps.kv.outputs.ServerPassword }} \
               sqlServerLogin=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, 'DatabaseUsername')] }} \
@@ -60,7 +60,7 @@ jobs:
             outputs=$(az deployment group create -g ${{ secrets.GLOBAL_NAME }} -f main.json -n ${{ env.name }} --no-prompt -p \
               oid=${{ secrets.CLIENT_ID }} \
               sid=${{ secrets.AD_SID }} \
-              sqlServerAdLogin=${{ secrets.AD_LOGIN }} \
+              adLogin=${{ secrets.AD_LOGIN }} \
               sqlServerSaLogin=${{ steps.kv.outputs.ServerUsername }} \
               sqlServerSaPassword=${{ steps.kv.outputs.ServerPassword }} \
               sqlServerLogin=${{ steps.kv.outputs[format('{0}-{1}', env.SITE_NAME, 'DatabaseUsername')] }} \

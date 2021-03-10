@@ -32,6 +32,8 @@ module main 'main.bicep' = {
   name: '${deployment().name}-main'
   params: {
     oid: oid
+    sid: sid
+    adLogin: sqlServerAdLogin
     primaryLocation: primaryLocation
     secondaryLocation: secondaryLocation
     sqlServerSaLogin: sqlServerSaLogin
