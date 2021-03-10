@@ -9,11 +9,6 @@ jobs:
   main:
     runs-on: ubuntu-latest
     environment: sandbox
-    outputs:
-      url: ${{ steps.id.outputs.id }}
-      acr: ${{ steps.az.outputs.acr }}
-      repo: ${{ steps.az.outputs.repo }}
-      sql: ${{ steps.az.outputs.sql }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -96,6 +91,7 @@ jobs:
             echo "::set-output name=acr::$(echo $outputs | jq -r '.acrHost.value')"
             echo "::set-output name=repo::$(echo $outputs | jq -r '.acrRepo.value')"
             echo "::set-output name=sql::$(echo $outputs | jq -r '.sqlHost.value')"
+            echo "::set-output name=url::$(echo $outputs | jq -r '.webHost.value')"
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
@@ -131,3 +127,6 @@ jobs:
           push: true
           tags: |
             ${{ steps.az.outputs.repo }}:latest
+      - name: Display sandbox URL
+        run: |
+          echo "${{ steps.az.outputs.url }}"

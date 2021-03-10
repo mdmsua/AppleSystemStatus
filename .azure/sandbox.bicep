@@ -82,3 +82,4 @@ module tls 'tls.bicep' = {
 output acrHost string = main.outputs.acrHost
 output acrRepo string = main.outputs.acrRepo
 output sqlHost string = main.outputs.sqlHost
+output webHost string = 'https://${hostname}'
