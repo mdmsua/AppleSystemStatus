@@ -26,19 +26,12 @@ jobs:
         with:
           keyvault: ${{ secrets.GLOBAL_NAME }}
           secrets: "ServerUsername,ServerPassword,RegistryUsername,RegistryPassword,${{ env.SITE_NAME }}-DatabaseUsername,${{ env.SITE_NAME }}-DatabasePassword"
-      - name: Download Bicep CLI & build template
-        run: |
-          curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
-          chmod +x ./bicep
-          ./bicep build main.bicep
-          rm ./bicep
-        working-directory: .azure
       - name: Validate deployment
         uses: azure/cli@v1
         with:
           inlineScript: |
             cd .azure
-            az deployment group validate -g ${{ secrets.GLOBAL_NAME }} -f main.json --no-prompt -p \
+            az deployment group validate -g ${{ secrets.GLOBAL_NAME }} -f main.bicep --no-prompt -p \
               oid=${{ secrets.CLIENT_ID }} \
               sid=${{ secrets.AD_SID }} \
               adLogin=${{ secrets.AD_LOGIN }} \
@@ -57,7 +50,7 @@ jobs:
         with:
           inlineScript: |
             cd .azure
-            outputs=$(az deployment group create -g ${{ secrets.GLOBAL_NAME }} -f main.json -n ${{ env.name }} --no-prompt -p \
+            outputs=$(az deployment group create -g ${{ secrets.GLOBAL_NAME }} -f main.bicep -n ${{ env.name }} --no-prompt -p \
               oid=${{ secrets.CLIENT_ID }} \
               sid=${{ secrets.AD_SID }} \
               adLogin=${{ secrets.AD_LOGIN }} \
